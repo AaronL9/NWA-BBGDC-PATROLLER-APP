@@ -1,20 +1,24 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { NavigationContainer } from "@react-navigation/native";
+import AuthContextProvider, { AuthContext } from "./context/authContext.js";
+import Authentication from "./stack/Authentication.jsx";
+import Home from "./stack/Home.jsx";
+import { useContext } from "react";
+
+function Root() {
+  const authCtx = useContext(AuthContext);
+  return authCtx.isAuthenticated ? <Home /> : <Authentication />;
+}
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <>
+      <StatusBar style="light" />
+      <AuthContextProvider>
+        <NavigationContainer>
+          <Root />
+        </NavigationContainer>
+      </AuthContextProvider>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
