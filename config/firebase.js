@@ -10,13 +10,13 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA4dNphGfsPJCFaOy2c-PH0hnBJN5m8RzI",
-  authDomain: "neigborhood-watch.firebaseapp.com",
-  projectId: "neigborhood-watch",
-  storageBucket: "neigborhood-watch.appspot.com",
-  messagingSenderId: "516332513600",
-  appId: "1:516332513600:web:44b6a6ffde87319d54b2a5",
-  measurementId: "G-2P6DC45698",
+  apiKey: process.env.EXPO_PUBLIC_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

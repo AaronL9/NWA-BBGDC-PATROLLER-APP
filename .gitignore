@@ -29,11 +29,16 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
 
 # typescript
 *.tsbuildinfo
 
 # Editor directories and files
+.vscode
 .vscode/*
 !.vscode/extensions.json
+
+#eas
+eas.json
