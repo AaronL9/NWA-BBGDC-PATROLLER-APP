@@ -88,8 +88,8 @@ export default function Home() {
             // Send location update to Firestore
             updateDoc(patrolLocationRef, {
               patrollerLocation: {
-                latitude: newCoords.latitude,
-                longitude: newCoords.longitude,
+                lat: newCoords.latitude,
+                lng: newCoords.longitude,
               },
             });
           }
