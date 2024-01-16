@@ -37,10 +37,10 @@ export const validateSignUpForm = (values, setErrors) => {
 
 export const validateLoginForm = (errorCode) => {
   switch (errorCode) {
-    case "auth/invalid-login-credentials":
-      return "Invalid login credentials";
+    case "auth/invalid-credential":
+      return "Invalid credential";
     case "auth/invalid-email":
-      return "Invalid Email";
+      return "Invalid email";
     case "auth/missing-password":
       return "Missing password";
   }

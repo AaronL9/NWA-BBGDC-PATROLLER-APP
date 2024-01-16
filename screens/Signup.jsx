@@ -80,7 +80,7 @@ const Signup = () => {
             Already have an account?{" "}
             <Text
               style={styles.loginLink}
-              onPress={() => navigation.navigate("Login")}
+              onPress={() => navigation.replace("Login")}
             >
               Login
             </Text>

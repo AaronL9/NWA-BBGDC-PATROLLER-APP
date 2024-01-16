@@ -1,6 +1,6 @@
 import { View, StyleSheet, StatusBar, Text, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { credentialFieldProps } from "../util/credentialFieldProps";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
@@ -20,10 +20,16 @@ export default function Login() {
     email: "",
     passowrd: "",
   });
+  const [error, setError] = useState(false);
 
   const loginInHandler = async () => {
-    authCtx.login(credential);
+    await authCtx.login(credential);
+    setError(authCtx.authError)
   };
+  
+  useEffect(() => {
+    setError(null);
+  }, [])
 
   return (
     <View style={styles.rootContainer}>
@@ -39,15 +45,15 @@ export default function Login() {
               {...credentialFieldProps(setCredential).passowrd}
             />
           </View>
-          {authCtx.authError && (
-            <ErrorLoginMessage message={authCtx.authError} />
+          {error && (
+            <ErrorLoginMessage message={error} />
           )}
           <AuthButton title={"Login"} onPress={loginInHandler} />
           <Text style={{ color: "white" }}>
             Don't have an account?{" "}
             <Text
               style={styles.signUpLink}
-              onPress={() => navigation.navigate("Signup")}
+              onPress={() => navigation.replace("Signup")}
             >
               Sign up
             </Text>

@@ -31,20 +31,20 @@ function AuthContextProvider({ children }) {
   async function signup(credential) {
     setAuthenticating(true);
     try {
+      const { firstName, lastName, contactNum, email, password } = credential;
       const { user } = await createUserWithEmailAndPassword(
         auth,
-        credential.email,
-        credential.password
+        email,
+        password
       );
-      const { firstName, lastName, contactNum } = credential;
       const data = {
         uid: user.uid,
+        email,
         firstName,
         lastName,
         contactNum,
       };
-      await addDoc(collection(db, "users"), data);
-      setUserData(data);
+      addDoc(collection(db, "patrollers"), data);
     } catch (error) {
       let errorMessage = "Failed to sign you up";
       if (error.message.includes("email-already-in-use")) {
@@ -77,17 +77,22 @@ function AuthContextProvider({ children }) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
-      try {
-        const q = query(collection(db, "users"), where("uid", "==", user.uid));
-        const querySnapshot = await getDocs(q);
-        setUserData(querySnapshot.docs[0].data());
-      } catch (error) {
-        console.log(error)
+      if (user) {
+        try {
+          const q = query(
+            collection(db, "patrollers"),
+            where("uid", "==", user.uid)
+          );
+          const querySnapshot = await getDocs(q);
+          const doc = querySnapshot.docs[0];
+          setUserData({ ...doc, docId: doc.id });
+        } catch (error) {
+          console.log(error);
+        }
       }
       setLoading(false);
-      console.log(userData);
+      setAuthError(null);
     });
-
     return unsubscribe;
   }, []);
 
