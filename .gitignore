@@ -42,3 +42,6 @@ yarn-error.*
 
 #eas
 eas.json
+
+#debugger
+%ProgramData%

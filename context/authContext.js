@@ -85,7 +85,7 @@ function AuthContextProvider({ children }) {
           );
           const querySnapshot = await getDocs(q);
           const doc = querySnapshot.docs[0];
-          setUserData({ ...doc, docId: doc.id });
+          setUserData({ ...doc.data(), docId: doc.id });
         } catch (error) {
           console.log(error);
         }
