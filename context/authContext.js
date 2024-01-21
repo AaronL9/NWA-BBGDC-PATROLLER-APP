@@ -1,19 +1,13 @@
-import { Alert } from "react-native";
 import { createContext, useState, useEffect } from "react";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../config/firebase";
 import { db } from "../config/firebase";
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { validateLoginForm } from "../util/formValidation";
 
 export const AuthContext = createContext({
   currentUser: null,
   login: () => {},
-  signup: () => {},
   logout: () => {},
   isAuthenticated: false,
   authenticating: false,
@@ -27,32 +21,6 @@ function AuthContextProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState(null);
-
-  async function signup(credential) {
-    setAuthenticating(true);
-    try {
-      const { firstName, lastName, contactNum, email, password } = credential;
-      const { user } = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const data = {
-        uid: user.uid,
-        email,
-        firstName,
-        lastName,
-        contactNum,
-      };
-      addDoc(collection(db, "patrollers"), data);
-    } catch (error) {
-      let errorMessage = "Failed to sign you up";
-      if (error.message.includes("email-already-in-use")) {
-        errorMessage = "Email already in use";
-      }
-      Alert.alert("Signup Failed", errorMessage);
-    }
-  }
 
   async function login({ email, password }) {
     setAuthenticating(true);
@@ -101,7 +69,6 @@ function AuthContextProvider({ children }) {
     currentUser,
     userData,
     login,
-    signup,
     logout,
     authenticating,
     isAuthenticated: !!currentUser,

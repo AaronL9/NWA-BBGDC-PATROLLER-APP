@@ -47,15 +47,6 @@ export default function Login() {
           </View>
           {error && <ErrorLoginMessage message={error} />}
           <AuthButton title={"Login"} onPress={loginInHandler} />
-          <Text style={{ color: "white" }}>
-            Don't have an account?{" "}
-            <Text
-              style={styles.signUpLink}
-              onPress={() => navigation.replace("Signup")}
-            >
-              Sign up
-            </Text>
-          </Text>
         </View>
       </ScrollView>
       {authCtx.authenticating && <Loader />}
