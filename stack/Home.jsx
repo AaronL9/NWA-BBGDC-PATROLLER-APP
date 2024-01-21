@@ -1,11 +1,15 @@
 import { useContext, useEffect, useState } from "react";
 import { View, Text, Image } from "react-native";
+import { doc, updateDoc } from "firebase/firestore";
+import { AuthContext } from "../context/authContext";
+import { db } from "../config/firebase";
+import { Colors } from "../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { doc, updateDoc } from "firebase/firestore";
-import { auth, db } from "../config/firebase";
 
 import "react-native-gesture-handler";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import {
   DrawerContentScrollView,
@@ -14,15 +18,14 @@ import {
 } from "@react-navigation/drawer";
 
 import Chat from "../screens/Chat";
-import Settings from "../screens/Settings";
-import { Colors } from "../constants/colors";
-import { AuthContext } from "../context/authContext";
+import Settings from "../screens/Settings.jsx";
 
 const Drawer = createDrawerNavigator();
+const Stack = createNativeStackNavigator();
 
 function CustomDrawerContent(props) {
+  const navigation = useNavigation();
   const authCtx = useContext(AuthContext);
-  console.log(authCtx.userData);
   return (
     <DrawerContentScrollView contentContainerStyle={{ flex: 1 }} {...props}>
       <View
@@ -39,11 +42,12 @@ function CustomDrawerContent(props) {
           style={{ width: 35, height: 35 }}
         />
         <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
-          {`${authCtx.userData.firstName} ${authCtx.userData.lastName}`}
+          {!authCtx.authenticating &&
+            `${authCtx.userData.firstName} ${authCtx.userData.lastName}`}
         </Text>
         <View style={{ marginStart: "auto" }}>
           <Ionicons
-            onPress={() => console.log("tap")}
+            onPress={() => navigation.navigate("Settings")}
             name="settings-outline"
             size={22}
             color={"white"}
@@ -64,59 +68,7 @@ function CustomDrawerContent(props) {
   );
 }
 
-export default function Home() {
-  const authCtx = useContext(AuthContext);
-  const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
-
-  useEffect(() => {
-    if (!!authCtx?.userData && !!authCtx?.userData?.docId) {
-      console.log(authCtx.userData.docId);
-      const patrolLocationRef = doc(db, "patrollers", authCtx.userData.docId);
-
-      const startLocationTracking = async () => {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          console.error("Location permission not granted");
-          return;
-        }
-
-        const locationSubscriber = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.Highest,
-            timeInterval: 5000,
-          },
-          (newLocation) => {
-            const newCoords = newLocation.coords;
-            // Check if the location has changed
-            if (
-              !location ||
-              location.latitude !== newCoords.latitude ||
-              location.longitude !== newCoords.longitude
-            ) {
-              setLocation(newCoords);
-              console.log(location);
-              // Send location update to Firestore
-              updateDoc(patrolLocationRef, {
-                patrollerLocation: {
-                  lat: newCoords.latitude,
-                  lng: newCoords.longitude,
-                },
-              });
-            }
-          }
-        );
-
-        return () => {
-          locationSubscriber.remove();
-        };
-      };
-
-      startLocationTracking();
-    } else {
-      console.error("authCtx.userData or authCtx.userData.docId is undefined");
-    }
-  }, [authCtx.userData]);
-
+function DrawerNavigator() {
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -142,5 +94,82 @@ export default function Home() {
         }}
       />
     </Drawer.Navigator>
+  );
+}
+
+export default function Home() {
+  const authCtx = useContext(AuthContext);
+  const [location, setLocation] = useState(null);
+
+  const isUserDataLoaded = !!authCtx?.userData && !!authCtx?.userData?.docId;
+
+  useEffect(() => {
+    if (isUserDataLoaded) {
+      console.log(authCtx.userData.docId);
+      const patrolLocationRef = doc(db, "patrollers", authCtx.userData.docId);
+
+      const startLocationTracking = async () => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.error("Location permission not granted");
+          return;
+        }
+
+        const locationSubscriber = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Highest,
+            timeInterval: 5000,
+          },
+          (newLocation) => {
+            const newCoords = newLocation.coords;
+            // Check if the location has changed
+            if (
+              !location ||
+              location.latitude !== newCoords.latitude ||
+              location.longitude !== newCoords.longitude
+            ) {
+              setLocation(newCoords);
+              console.log("My location: ", newCoords);
+              // Send location update to Firestore
+              updateDoc(patrolLocationRef, {
+                patrollerLocation: {
+                  lat: newCoords.latitude,
+                  lng: newCoords.longitude,
+                },
+              });
+            }
+          }
+        );
+
+        return () => {
+          locationSubscriber.remove();
+        };
+      };
+
+      startLocationTracking();
+    }
+  }, [authCtx.userData]);
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: Colors.primary400 },
+        headerTintColor: "white",
+        headerShadowVisible: false,
+      }}
+    >
+      <Stack.Screen
+        name="Drawer"
+        component={DrawerNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={Settings}
+        options={{
+          animation: "fade_from_bottom",
+        }}
+      />
+    </Stack.Navigator>
   );
 }

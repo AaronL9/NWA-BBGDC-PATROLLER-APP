@@ -1,15 +1,12 @@
-import { useState } from "react";
-import { Text, View, Modal, Button } from "react-native";
+import { Text, View, Button } from "react-native";
+import { Colors } from "../constants/colors";
 
 export default function Settings() {
-  const [modalVisible, setModalVisible] = useState(true);
-
   return (
-    <Modal visible={modalVisible}>
-      <View>
+    <>
+      <View style={{ backgroundColor: Colors.primary400, flex: 1 }}>
         <Text>Settings</Text>
-        <Button title="close" onPress={() => setModalVisible(false)} />
       </View>
-    </Modal>
+    </>
   );
 }

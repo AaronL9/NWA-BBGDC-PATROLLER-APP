@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { View, StyleSheet, Text, StatusBar, ScrollView } from "react-native";
 import { Octicons } from "@expo/vector-icons";
 import { AuthContext } from "../context/authContext";
@@ -33,7 +33,7 @@ const Signup = () => {
     }
   };
 
-  useEffect(() => {}, [credential]);
+  const inputProps = credentialFieldProps(setCredential);
 
   return (
     <View style={styles.rootContainer}>
@@ -44,22 +44,14 @@ const Signup = () => {
         />
         <View style={styles.loginContainer}>
           <View style={styles.rowContainer}>
-            <CredentialField
-              {...credentialFieldProps(setCredential).firstName}
-            />
-            <CredentialField
-              {...credentialFieldProps(setCredential).lastName}
-            />
+            <CredentialField {...inputProps.firstName} />
+            <CredentialField {...inputProps.lastName} />
           </View>
           <View style={styles.stackContainer}>
-            <CredentialField {...credentialFieldProps(setCredential).email} />
-            <CredentialField {...credentialFieldProps(setCredential).phone} />
-            <CredentialField
-              {...credentialFieldProps(setCredential).passowrd}
-            />
-            <CredentialField
-              {...credentialFieldProps(setCredential).confirmPassword}
-            />
+            <CredentialField {...inputProps.phone} />
+            <CredentialField {...inputProps.email} />
+            <CredentialField {...inputProps.passowrd} />
+            <CredentialField {...inputProps.confirmPassword} />
           </View>
           {Object.keys(errors).length !== 0 && (
             <View style={styles.errorsContainer}>

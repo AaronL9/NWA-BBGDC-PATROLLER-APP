@@ -31,14 +31,15 @@ export const credentialFieldProps = (setCredential) => {
         onChangeValueHandler("email", setCredential, enteredText),
     },
     phone: {
-      icon: "phone",
-      placeholder: "Contact Number",
+      icon: "phone-portrait",
+      placeholder: "Phone Number",
       customStyle: { width: "100%" },
+      inputType: "numeric",
       changeTextHandler: (enteredText) =>
         onChangeValueHandler("contactNum", setCredential, enteredText),
     },
     passowrd: {
-      icon: "lock",
+      icon: "lock-closed",
       placeholder: "Password",
       customStyle: { width: "100%" },
       isPassword: true,
@@ -46,7 +47,7 @@ export const credentialFieldProps = (setCredential) => {
         onChangeValueHandler("password", setCredential, enteredText),
     },
     confirmPassword: {
-      icon: "lock",
+      icon: "lock-closed",
       placeholder: "Confirm Password",
       customStyle: { width: "100%" },
       isPassword: true,
@@ -58,9 +59,9 @@ export const credentialFieldProps = (setCredential) => {
 
 const onChangeValueHandler = (identifier, setCredential, enteredText) => {
   const value = identifier.includes("assword")
-        ? enteredText
-        : enteredText.trim()
-  
+    ? enteredText
+    : enteredText.trim();
+
   setCredential((prev) => {
     return {
       ...prev,

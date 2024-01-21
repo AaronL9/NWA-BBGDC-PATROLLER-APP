@@ -1,6 +1,6 @@
 import { View, TextInput, StyleSheet } from "react-native";
 import { Colors } from "../../constants/colors";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 const CredentialField = ({
   icon,
@@ -8,16 +8,18 @@ const CredentialField = ({
   customStyle,
   isPassword = false,
   changeTextHandler = () => {},
+  inputType = "text",
 }) => {
   return (
     <View style={[styles.inputContainerStyle, customStyle]}>
-      <MaterialIcons name={icon} size={24} color={Colors.primary400} />
+      <Ionicons name={icon} size={24} color={Colors.primary400} />
       <TextInput
         autoCapitalize="none"
         secureTextEntry={isPassword}
         style={styles.inputStyle}
         placeholder={placeholder}
         onChangeText={changeTextHandler}
+        inputMode={inputType}
       />
     </View>
   );

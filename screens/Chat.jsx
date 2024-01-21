@@ -17,11 +17,10 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    const collectionRef = collection(db, "rooms", roomId, 'chats');
+    const collectionRef = collection(db, "rooms", roomId, "chats");
     const q = query(collectionRef, orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log("querySnapshot unsusbscribe");
       setMessages(
         querySnapshot.docs.map((doc) => ({
           _id: doc.data()._id,
@@ -39,7 +38,7 @@ export default function Chat() {
       GiftedChat.append(previousMessages, messages)
     );
     const { _id, createdAt, text, user } = messages[0];
-    addDoc(collection(db, "rooms", roomId, 'chats'), {
+    addDoc(collection(db, "rooms", roomId, "chats"), {
       _id,
       createdAt,
       text,

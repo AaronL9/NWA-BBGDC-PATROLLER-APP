@@ -24,12 +24,14 @@ export default function Login() {
 
   const loginInHandler = async () => {
     await authCtx.login(credential);
-    setError(authCtx.authError)
+    setError(authCtx.authError);
   };
-  
+
+  const inputProps = credentialFieldProps(setCredential);
+
   useEffect(() => {
     setError(null);
-  }, [])
+  }, []);
 
   return (
     <View style={styles.rootContainer}>
@@ -40,14 +42,10 @@ export default function Login() {
         />
         <View style={styles.loginContainer}>
           <View style={styles.inputContainerStyle}>
-            <CredentialField {...credentialFieldProps(setCredential).email} />
-            <CredentialField
-              {...credentialFieldProps(setCredential).passowrd}
-            />
+            <CredentialField {...inputProps.email} />
+            <CredentialField {...inputProps.passowrd} />
           </View>
-          {error && (
-            <ErrorLoginMessage message={error} />
-          )}
+          {error && <ErrorLoginMessage message={error} />}
           <AuthButton title={"Login"} onPress={loginInHandler} />
           <Text style={{ color: "white" }}>
             Don't have an account?{" "}

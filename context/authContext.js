@@ -23,7 +23,7 @@ export const AuthContext = createContext({
 
 function AuthContextProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState(null);
@@ -52,7 +52,6 @@ function AuthContextProvider({ children }) {
       }
       Alert.alert("Signup Failed", errorMessage);
     }
-    setAuthenticating(false);
   }
 
   async function login({ email, password }) {
@@ -63,7 +62,6 @@ function AuthContextProvider({ children }) {
       console.log(error.code);
       setAuthError(validateLoginForm(error.code));
     }
-    setAuthenticating(false);
   }
 
   async function logout() {
@@ -87,10 +85,13 @@ function AuthContextProvider({ children }) {
           const doc = querySnapshot.docs[0];
           setUserData({ ...doc.data(), docId: doc.id });
         } catch (error) {
-          console.log(error);
+          console.log("Fetch User Data Error: ", error);
         }
+      } else {
+        setUserData(null);
       }
       setLoading(false);
+      setAuthenticating(false);
       setAuthError(null);
     });
     return unsubscribe;
