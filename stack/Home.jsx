@@ -25,7 +25,7 @@ const Stack = createNativeStackNavigator();
 
 function CustomDrawerContent(props) {
   const navigation = useNavigation();
-  const authCtx = useContext(AuthContext);
+  const { user, authenticating, logout } = useContext(AuthContext);
   return (
     <DrawerContentScrollView contentContainerStyle={{ flex: 1 }} {...props}>
       <View
@@ -42,8 +42,7 @@ function CustomDrawerContent(props) {
           style={{ width: 35, height: 35 }}
         />
         <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
-          {!authCtx.authenticating &&
-            `${authCtx.userData.firstName} ${authCtx.userData.lastName}`}
+          {!authenticating && `${user.data.firstName} ${user.data.lastName}`}
         </Text>
         <View style={{ marginStart: "auto" }}>
           <Ionicons
@@ -62,7 +61,7 @@ function CustomDrawerContent(props) {
         icon={({ color, size }) => (
           <Ionicons name="exit-outline" size={size} color={color} />
         )}
-        onPress={authCtx.logout}
+        onPress={logout}
       />
     </DrawerContentScrollView>
   );
@@ -98,15 +97,14 @@ function DrawerNavigator() {
 }
 
 export default function Home() {
-  const authCtx = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [location, setLocation] = useState(null);
 
-  const isUserDataLoaded = !!authCtx?.userData && !!authCtx?.userData?.docId;
+  const isUserDataLoaded = !!user?.data && !!user?.data?.docId;
 
   useEffect(() => {
     if (isUserDataLoaded) {
-      console.log(authCtx.userData.docId);
-      const patrolLocationRef = doc(db, "patrollers", authCtx.userData.docId);
+      const patrolLocationRef = doc(db, "patrollers", user.data.docId);
 
       const startLocationTracking = async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -148,7 +146,7 @@ export default function Home() {
 
       startLocationTracking();
     }
-  }, [authCtx.userData]);
+  }, []);
 
   return (
     <Stack.Navigator

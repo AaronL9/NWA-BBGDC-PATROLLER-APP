@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
-import { signInWithCustomToken } from "firebase/auth";
-import { auth } from "../config/firebase";
+import { query, collection, where, getDocs } from "@firebase/firestore";
+import { signInWithCustomToken, signOut } from "firebase/auth";
+import { auth, db } from "../config/firebase";
 
 export const AuthContext = createContext({
   login: () => {},
@@ -8,12 +9,12 @@ export const AuthContext = createContext({
   isAuthenticated: false,
   authenticating: false,
   authError: null,
-  userData: {},
+  user: {},
 });
 
 function AuthContextProvider({ children }) {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState({ isAuthenticated: false, data: null });
+  const [loading, setLoading] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState(null);
 
@@ -33,14 +34,10 @@ function AuthContextProvider({ children }) {
 
       if (!response.ok) {
         setAuthError(json.error);
-        console.log(json);
-        setAuthenticating(false);
         return;
       }
 
-      const userCredential = await signInWithCustomToken(auth, json.token);
-      const user = userCredential.user;
-      console.log("User signed in:", user.uid);
+      await signInWithCustomToken(auth, json.token);
     } catch (error) {
       console.log(error);
     }
@@ -49,17 +46,44 @@ function AuthContextProvider({ children }) {
 
   async function logout() {
     try {
+      await signOut();
     } catch (error) {
       console.log(error.code, error.message);
     }
   }
 
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log(user?.uid);
+      setUser((prev) => ({ ...prev, isAuthenticated: !!user }));
+      if (user) {
+        try {
+          const q = query(
+            collection(db, "patrollers"),
+            where("uid", "==", user.uid)
+          );
+          const querySnapshot = await getDocs(q);
+          const doc = querySnapshot.docs[0];
+          const userData = { ...doc.data(), docId: doc.id };
+          setUser((prev) => ({ ...prev, data: userData }));
+        } catch (error) {
+          console.log("Fetch User Data Error: ", error);
+        }
+      } else {
+        setUserData(null);
+      }
+      setLoading(false);
+      setAuthenticating(false);
+      setAuthError(null);
+    });
+    return unsubscribe;
+  }, []);
+
   const value = {
-    userData,
+    user,
     login,
     logout,
     authenticating,
-    isAuthenticated: false,
     authError,
   };
 

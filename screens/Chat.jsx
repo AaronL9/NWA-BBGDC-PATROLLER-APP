@@ -12,8 +12,8 @@ import { AuthContext } from "../context/authContext";
 
 export default function Chat() {
   const adminId = "sZn6iAa3IcNBhtgpofR2ykA1yRo2";
-  const { currentUser } = useContext(AuthContext);
-  const roomId = currentUser.uid + adminId;
+  const { user } = useContext(AuthContext);
+  const roomId = user.data.uid + adminId;
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function Chat() {
       messages={messages}
       onSend={(messages) => onSend(messages)}
       user={{
-        _id: currentUser.email,
+        _id: user.data.username,
         avatar: "https://i.pravatar.cc/300",
       }}
     />
