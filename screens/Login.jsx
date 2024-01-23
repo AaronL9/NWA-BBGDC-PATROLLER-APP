@@ -1,7 +1,7 @@
-import { View, StyleSheet, StatusBar, Text, ScrollView } from "react-native";
+import { View, StyleSheet, StatusBar, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useContext, useEffect, useState } from "react";
-import { credentialFieldProps } from "../util/credentialFieldProps";
+import { useContext, useState } from "react";
+import { loginFieldProps } from "../util/credentialFieldProps";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
 
@@ -9,7 +9,6 @@ import { Colors } from "../constants/colors";
 import CredentialField from "../components/auth/CredentialField";
 import AuthButton from "../components/auth/AuthButton";
 import Header from "../components/Header";
-import Loader from "../components/global/Loader";
 import ErrorLoginMessage from "../components/auth/ErrorLoginMessage";
 
 export default function Login() {
@@ -17,21 +16,15 @@ export default function Login() {
   const navigation = useNavigation();
 
   const [credential, setCredential] = useState({
-    email: "",
+    identifier: "",
     passowrd: "",
   });
-  const [error, setError] = useState(false);
 
   const loginInHandler = async () => {
     await authCtx.login(credential);
-    setError(authCtx.authError);
   };
 
-  const inputProps = credentialFieldProps(setCredential);
-
-  useEffect(() => {
-    setError(null);
-  }, []);
+  const inputProps = loginFieldProps(setCredential);
 
   return (
     <View style={styles.rootContainer}>
@@ -42,14 +35,15 @@ export default function Login() {
         />
         <View style={styles.loginContainer}>
           <View style={styles.inputContainerStyle}>
-            <CredentialField {...inputProps.email} />
+            <CredentialField {...inputProps.identifier} />
             <CredentialField {...inputProps.passowrd} />
           </View>
-          {error && <ErrorLoginMessage message={error} />}
+          {authCtx.authError && (
+            <ErrorLoginMessage message={authCtx.authError} />
+          )}
           <AuthButton title={"Login"} onPress={loginInHandler} />
         </View>
       </ScrollView>
-      {authCtx.authenticating && <Loader />}
     </View>
   );
 }

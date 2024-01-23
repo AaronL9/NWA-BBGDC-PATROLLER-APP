@@ -1,12 +1,8 @@
 import { createContext, useState, useEffect } from "react";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "../config/firebase";
-import { db } from "../config/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { validateLoginForm } from "../util/formValidation";
 
 export const AuthContext = createContext({
-  currentUser: null,
   login: () => {},
   logout: () => {},
   isAuthenticated: false,
@@ -16,62 +12,54 @@ export const AuthContext = createContext({
 });
 
 function AuthContextProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState(null);
 
-  async function login({ email, password }) {
+  const login = async ({ identifier, password }) => {
     setAuthenticating(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const response = await fetch(
+        `http://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/patroller/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier, password }),
+        }
+      );
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        setAuthError(json.error);
+        console.log(json);
+        setAuthenticating(false);
+        return;
+      }
+
+      const userCredential = await signInWithCustomToken(auth, json.token);
+      const user = userCredential.user;
+      console.log("User signed in:", user.uid);
     } catch (error) {
-      console.log(error.code);
-      setAuthError(validateLoginForm(error.code));
+      console.log(error);
     }
-  }
+    setAuthenticating(false);
+  };
 
   async function logout() {
     try {
-      await signOut(auth);
     } catch (error) {
       console.log(error.code, error.message);
     }
   }
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      setCurrentUser(user);
-      if (user) {
-        try {
-          const q = query(
-            collection(db, "patrollers"),
-            where("uid", "==", user.uid)
-          );
-          const querySnapshot = await getDocs(q);
-          const doc = querySnapshot.docs[0];
-          setUserData({ ...doc.data(), docId: doc.id });
-        } catch (error) {
-          console.log("Fetch User Data Error: ", error);
-        }
-      } else {
-        setUserData(null);
-      }
-      setLoading(false);
-      setAuthenticating(false);
-      setAuthError(null);
-    });
-    return unsubscribe;
-  }, []);
-
   const value = {
-    currentUser,
     userData,
     login,
     logout,
     authenticating,
-    isAuthenticated: !!currentUser,
+    isAuthenticated: false,
     authError,
   };
 

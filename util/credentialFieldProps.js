@@ -7,6 +7,26 @@ export const signUpInitValue = {
   confirmPassword: "",
 };
 
+export const loginFieldProps = (setCredential) => {
+  return {
+    identifier: {
+      icon: "person",
+      placeholder: "Username or phone number",
+      customStyle: { width: "100%" },
+      changeTextHandler: (enteredText) =>
+        onChangeValueHandler("identifier", setCredential, enteredText),
+    },
+    passowrd: {
+      icon: "lock-closed",
+      placeholder: "Password",
+      customStyle: { width: "100%" },
+      isPassword: true,
+      changeTextHandler: (enteredText) =>
+        onChangeValueHandler("password", setCredential, enteredText),
+    },
+  };
+};
+
 export const credentialFieldProps = (setCredential) => {
   return {
     firstName: {
@@ -24,8 +44,8 @@ export const credentialFieldProps = (setCredential) => {
         onChangeValueHandler("lastName", setCredential, enteredText),
     },
     email: {
-      icon: "mail",
-      placeholder: "Email",
+      icon: "person",
+      placeholder: "Username or phone number",
       customStyle: { width: "100%" },
       changeTextHandler: (enteredText) =>
         onChangeValueHandler("email", setCredential, enteredText),
