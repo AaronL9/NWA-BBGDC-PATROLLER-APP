@@ -1,4 +1,9 @@
-import React, { useState, useCallback, useEffect, useContext } from "react";
+import React, {
+  useState,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+} from "react";
 import { GiftedChat } from "react-native-gifted-chat";
 import {
   collection,
@@ -9,14 +14,15 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { AuthContext } from "../context/authContext";
+import { ActivityIndicator } from "react-native";
 
-export default function Chat() {
-  const adminId = "sZn6iAa3IcNBhtgpofR2ykA1yRo2";
+export default function Chat({ route }) {
   const { user } = useContext(AuthContext);
-  const roomId = user.data.uid + adminId;
+  const { adminId } = route.params;
   const [messages, setMessages] = useState([]);
+  const roomId = `${user.data.uid}_${adminId}`;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const collectionRef = collection(db, "rooms", roomId, "chats");
     const q = query(collectionRef, orderBy("createdAt", "desc"));
 
@@ -50,6 +56,7 @@ export default function Chat() {
     <GiftedChat
       messages={messages}
       onSend={(messages) => onSend(messages)}
+      renderLoading={() => <ActivityIndicator size={"large"} color={"black"} />}
       user={{
         _id: user.data.username,
         avatar: "https://i.pravatar.cc/300",

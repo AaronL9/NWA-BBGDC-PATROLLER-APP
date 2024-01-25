@@ -34,19 +34,20 @@ function AuthContextProvider({ children }) {
 
       if (!response.ok) {
         setAuthError(json.error);
+        setAuthenticating(false);
         return;
       }
 
       await signInWithCustomToken(auth, json.token);
     } catch (error) {
-      console.log(error);
+      setAuthenticating(false);
+      setAuthError(error);
     }
-    setAuthenticating(false);
   };
 
   async function logout() {
     try {
-      await signOut();
+      await signOut(auth);
     } catch (error) {
       console.log(error.code, error.message);
     }
@@ -54,7 +55,6 @@ function AuthContextProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      console.log(user?.uid);
       setUser((prev) => ({ ...prev, isAuthenticated: !!user }));
       if (user) {
         try {
@@ -65,12 +65,13 @@ function AuthContextProvider({ children }) {
           const querySnapshot = await getDocs(q);
           const doc = querySnapshot.docs[0];
           const userData = { ...doc.data(), docId: doc.id };
+          console.log(userData.uid);
           setUser((prev) => ({ ...prev, data: userData }));
         } catch (error) {
           console.log("Fetch User Data Error: ", error);
         }
       } else {
-        setUserData(null);
+        setUser({ data: null, isAuthenticated: false });
       }
       setLoading(false);
       setAuthenticating(false);

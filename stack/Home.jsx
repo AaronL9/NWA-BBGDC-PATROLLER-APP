@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useLayoutEffect, useState } from "react";
 import { View, Text, Image } from "react-native";
 import { doc, updateDoc } from "firebase/firestore";
 import { AuthContext } from "../context/authContext";
@@ -19,6 +19,8 @@ import {
 
 import Chat from "../screens/Chat";
 import Settings from "../screens/Settings.jsx";
+import LocationReport from "../screens/LocationReport.jsx";
+import ChatTab from "../screens/ChatTab.jsx";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -81,15 +83,26 @@ function DrawerNavigator() {
         drawerActiveTintColor: "black",
         drawerActiveBackgroundColor: "white",
         drawerLabelStyle: { fontSize: 16 },
+        sceneContainerStyle: { backgroundColor: "#faf9ff" },
       }}
     >
       <Drawer.Screen
         name="Chats"
-        component={Chat}
+        component={ChatTab}
         options={{
           drawerIcon: ({ color, size }) => (
             <Ionicons name="chatbubble-outline" size={size} color={color} />
           ),
+        }}
+      />
+      <Drawer.Screen
+        name="LocationReport"
+        component={LocationReport}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="location-outline" size={size} color={color} />
+          ),
+          drawerLabel: "Tracker",
         }}
       />
     </Drawer.Navigator>
@@ -102,7 +115,7 @@ export default function Home() {
 
   const isUserDataLoaded = !!user?.data && !!user?.data?.docId;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isUserDataLoaded) {
       const patrolLocationRef = doc(db, "patrollers", user.data.docId);
 
@@ -160,6 +173,11 @@ export default function Home() {
         name="Drawer"
         component={DrawerNavigator}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={Chat}
+        options={{ animation: "fade_from_bottom" }}
       />
       <Stack.Screen
         name="Settings"

@@ -6,8 +6,12 @@ import Home from "./stack/Home.jsx";
 import { useContext } from "react";
 
 function Root() {
-  const authCtx = useContext(AuthContext);
-  return authCtx.user.isAuthenticated ? <Home /> : <Authentication />;
+  const { user, authenticating } = useContext(AuthContext);
+  return user.isAuthenticated && !authenticating ? (
+    <Home />
+  ) : (
+    <Authentication />
+  );
 }
 
 export default function App() {
