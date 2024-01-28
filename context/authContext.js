@@ -22,7 +22,7 @@ function AuthContextProvider({ children }) {
     setAuthenticating(true);
     try {
       const response = await fetch(
-        `http://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/patroller/login`,
+        `https://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/patroller/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

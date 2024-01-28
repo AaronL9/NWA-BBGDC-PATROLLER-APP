@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-export default function ChatCard() {
+export default function ChatCard({ name, uid }) {
   const navigation = useNavigation();
   return (
     <View style={{ backgroundColor: "white" }}>
@@ -10,7 +10,7 @@ export default function ChatCard() {
         style={styles.container}
         onPress={() =>
           navigation.navigate("Chat", {
-            adminId: "sZn6iAa3IcNBhtgpofR2ykA1yRo2",
+            adminId: uid,
           })
         }
       >
@@ -19,7 +19,9 @@ export default function ChatCard() {
           source={require("../../assets/profile-circle.png")}
         />
         <View>
-          <Text>Aaron Lomibao | Admin</Text>
+          <Text>
+            {name} | <Text style={{ fontWeight: "bold" }}>Admin</Text>
+          </Text>
           <Text style={styles.lastChat}>Hello Sir</Text>
         </View>
       </Pressable>

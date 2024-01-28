@@ -1,17 +1,39 @@
 import { StyleSheet, View } from "react-native";
-import React from "react";
-import ChatCard from "../components/chat/ChatCard";
+import React, { useEffect, useState } from "react";
 
 import { useWindowDimensions } from "react-native";
 import { TabView, SceneMap } from "react-native-tab-view";
 import { TabBar } from "react-native-tab-view";
 
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../config/firebase";
+
+import ChatCard from "../components/chat/ChatCard";
+
 const SecondRoute = () => <View />;
 
 const ChatList = () => {
+  const [admins, setAdmins] = useState([]);
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      const querySnapshot = await getDocs(collection(db, "admins"));
+      const data = querySnapshot.docs.map((doc) => doc.data());
+      setAdmins(data);
+    };
+    fetchAdmins();
+  }, []);
+
+  console.log(admins);
   return (
     <View style={styles.rootContainer}>
-      <ChatCard />
+      {admins.map((admin, index) => (
+        <ChatCard
+          key={index}
+          name={`${admin.firstName} ${admin.lastName}`}
+          uid={admin.uid}
+        />
+      ))}
     </View>
   );
 };
@@ -26,8 +48,8 @@ export default function ChatTab() {
 
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
-    { key: "first", title: "First" },
-    { key: "second", title: "Second" },
+    { key: "first", title: "Chat" },
+    { key: "second", title: "Group" },
   ]);
 
   return (
