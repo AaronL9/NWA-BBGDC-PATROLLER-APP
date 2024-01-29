@@ -1,6 +1,7 @@
 // PatrollerMabp.js
 import React, { useState, useContext, useEffect } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
+import polyline from "@mapbox/polyline";
 import { AuthContext } from "../context/authContext";
 
 const PatrollerMabp = () => {
@@ -24,7 +25,11 @@ const PatrollerMabp = () => {
 
       if (data.status === "OK") {
         const points = data.routes[0].overview_polyline.points;
-        const routeCoordinates = decodePolyline(points);
+        const decodedCoordinates = polyline.decode(points);
+        const routeCoordinates = decodedCoordinates.map((coord) => ({
+          latitude: coord[0],
+          longitude: coord[1],
+        }));
         setRouteCoordinates(routeCoordinates);
       } else {
         console.error("Error fetching directions:", data.status);
@@ -32,46 +37,6 @@ const PatrollerMabp = () => {
     } catch (error) {
       console.error("Error fetching directions:", error.message);
     }
-  };
-
-  const decodePolyline = (encoded) => {
-    // Function to decode the encoded polyline
-    let index = 0;
-    let len = encoded.length;
-    let lat = 0;
-    let lng = 0;
-    let coordinates = [];
-
-    while (index < len) {
-      let b;
-      let shift = 0;
-      let result = 0;
-
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-
-      let dlat = result & 1 ? ~(result >> 1) : result >> 1;
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-
-      let dlng = result & 1 ? ~(result >> 1) : result >> 1;
-      lng += dlng;
-
-      coordinates.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
-    }
-
-    return coordinates;
   };
 
   useEffect(() => {
