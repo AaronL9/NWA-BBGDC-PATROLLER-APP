@@ -19,10 +19,7 @@ export default function ChatCard({ name, uid }) {
           source={require("../../assets/profile-circle.png")}
         />
         <View>
-          <Text>
-            {name} | <Text style={{ fontWeight: "bold" }}>Admin</Text>
-          </Text>
-          <Text style={styles.lastChat}>Hello Sir</Text>
+          <Text style={{ fontWeight: "bold" }}>{name}</Text>
         </View>
       </Pressable>
     </View>

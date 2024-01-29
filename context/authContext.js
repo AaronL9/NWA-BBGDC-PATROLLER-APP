@@ -10,6 +10,8 @@ export const AuthContext = createContext({
   authenticating: false,
   authError: null,
   user: {},
+  patrollerLocation: {},
+  setPatrollerLocation: () => {},
 });
 
 function AuthContextProvider({ children }) {
@@ -17,6 +19,7 @@ function AuthContextProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState(null);
+  const [patrollerLocation, setPatrollerLocation] = useState(null);
 
   const login = async ({ identifier, password }) => {
     setAuthenticating(true);
@@ -86,6 +89,8 @@ function AuthContextProvider({ children }) {
     logout,
     authenticating,
     authError,
+    patrollerLocation,
+    setPatrollerLocation,
   };
 
   return (

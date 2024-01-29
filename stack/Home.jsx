@@ -21,6 +21,7 @@ import Chat from "../screens/Chat";
 import Settings from "../screens/Settings.jsx";
 import LocationReport from "../screens/LocationReport.jsx";
 import ChatTab from "../screens/ChatTab.jsx";
+import PatrollerMap from "../screens/PatrollerMap.jsx";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -103,6 +104,7 @@ function DrawerNavigator() {
             <Ionicons name="location-outline" size={size} color={color} />
           ),
           drawerLabel: "Tracker",
+          headerTitle: "Tracker",
         }}
       />
     </Drawer.Navigator>
@@ -110,7 +112,7 @@ function DrawerNavigator() {
 }
 
 export default function Home() {
-  const { user } = useContext(AuthContext);
+  const { user, setPatrollerLocation } = useContext(AuthContext);
   const [location, setLocation] = useState(null);
 
   const isUserDataLoaded = !!user?.data && !!user?.data?.docId;
@@ -140,6 +142,10 @@ export default function Home() {
               location.longitude !== newCoords.longitude
             ) {
               setLocation(newCoords);
+              setPatrollerLocation({
+                latitude: newCoords.latitude,
+                longitude: newCoords.longitude,
+              });
               console.log("My location: ", newCoords);
               // Send location update to Firestore
               updateDoc(patrolLocationRef, {
@@ -177,6 +183,11 @@ export default function Home() {
       <Stack.Screen
         name="Chat"
         component={Chat}
+        options={{ animation: "fade_from_bottom" }}
+      />
+      <Stack.Screen
+        name="PatrollerMap"
+        component={PatrollerMap}
         options={{ animation: "fade_from_bottom" }}
       />
       <Stack.Screen
