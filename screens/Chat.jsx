@@ -44,6 +44,7 @@ export default function Chat({ route }) {
       GiftedChat.append(previousMessages, messages)
     );
     const { _id, createdAt, text, user } = messages[0];
+    console.log(_id, createdAt.toString());
     addDoc(collection(db, "rooms", roomId, "chats"), {
       _id,
       createdAt,

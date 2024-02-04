@@ -88,15 +88,6 @@ function DrawerNavigator() {
       }}
     >
       <Drawer.Screen
-        name="Chats"
-        component={ChatTab}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <Ionicons name="chatbubble-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Drawer.Screen
         name="LocationReport"
         component={LocationReport}
         options={{
@@ -105,6 +96,15 @@ function DrawerNavigator() {
           ),
           drawerLabel: "Tracker",
           headerTitle: "Tracker",
+        }}
+      />
+      <Drawer.Screen
+        name="Chats"
+        component={ChatTab}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="chatbubble-outline" size={size} color={color} />
+          ),
         }}
       />
     </Drawer.Navigator>

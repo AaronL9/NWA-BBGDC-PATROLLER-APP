@@ -34,7 +34,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 8,
     gap: 4,
-    overflow: "hidden",
   },
   image: {
     width: 50,
