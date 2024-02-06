@@ -28,7 +28,7 @@ const Stack = createNativeStackNavigator();
 
 function CustomDrawerContent(props) {
   const navigation = useNavigation();
-  const { user, authenticating, logout } = useContext(AuthContext);
+  const { user, authenticating, logout, avatar } = useContext(AuthContext);
   return (
     <DrawerContentScrollView contentContainerStyle={{ flex: 1 }} {...props}>
       <View
@@ -41,8 +41,10 @@ function CustomDrawerContent(props) {
         }}
       >
         <Image
-          source={require("../assets/profile-circle.png")}
-          style={{ width: 35, height: 35 }}
+          source={
+            avatar ? { uri: avatar } : require("../assets/profile-circle.png")
+          }
+          style={{ width: 35, height: 35, borderRadius: 17.5 }}
         />
         <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
           {!authenticating && `${user.data.firstName} ${user.data.lastName}`}
@@ -173,6 +175,7 @@ export default function Home() {
         headerStyle: { backgroundColor: Colors.primary400 },
         headerTintColor: "white",
         headerShadowVisible: false,
+        contentStyle: { backgroundColor: "white" },
       }}
     >
       <Stack.Screen

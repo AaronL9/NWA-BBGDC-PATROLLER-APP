@@ -1,7 +1,8 @@
 import { createContext, useState, useEffect } from "react";
 import { query, collection, where, getDocs } from "@firebase/firestore";
+import { getDownloadURL, ref } from "firebase/storage";
 import { signInWithCustomToken, signOut } from "firebase/auth";
-import { auth, db } from "../config/firebase";
+import { auth, db, storage } from "../config/firebase";
 
 export const AuthContext = createContext({
   login: () => {},
@@ -12,10 +13,13 @@ export const AuthContext = createContext({
   user: {},
   patrollerLocation: {},
   setPatrollerLocation: () => {},
+  avatar: "",
+  setAvatar: () => {},
 });
 
 function AuthContextProvider({ children }) {
   const [user, setUser] = useState({ isAuthenticated: false, data: null });
+  const [avatar, setAvatar] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [authError, setAuthError] = useState(null);
@@ -58,7 +62,6 @@ function AuthContextProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      setUser((prev) => ({ ...prev, isAuthenticated: !!user }));
       if (user) {
         try {
           const q = query(
@@ -68,10 +71,18 @@ function AuthContextProvider({ children }) {
           const querySnapshot = await getDocs(q);
           const doc = querySnapshot.docs[0];
           const userData = { ...doc.data(), docId: doc.id };
-          console.log(userData.uid);
-          setUser((prev) => ({ ...prev, data: userData }));
+
+          setUser({ isAuthenticated: true, data: userData });
         } catch (error) {
           console.log("Fetch User Data Error: ", error);
+        }
+        try {
+          const uri = await getDownloadURL(
+            ref(storage, `patrollers/${user.uid}/profile_pic`)
+          );
+          setAvatar(uri);
+        } catch (error) {
+          setAvatar(null);
         }
       } else {
         setUser({ data: null, isAuthenticated: false });
@@ -91,6 +102,8 @@ function AuthContextProvider({ children }) {
     authError,
     patrollerLocation,
     setPatrollerLocation,
+    avatar,
+    setAvatar,
   };
 
   return (
