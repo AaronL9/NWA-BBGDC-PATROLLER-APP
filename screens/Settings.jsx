@@ -1,10 +1,11 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View, Text } from "react-native";
-import { Entypo } from "@expo/vector-icons";
+import { Entypo, Feather } from "@expo/vector-icons";
 import { Colors } from "../constants/colors";
 import * as ImagePicker from "expo-image-picker";
-import { storage } from "../config/firebase";
+import { db, storage } from "../config/firebase";
 import { getDownloadURL, uploadBytes, ref } from "firebase/storage";
+import { doc, setDoc } from "firebase/firestore";
 
 import {
   MenuProvider,
@@ -17,6 +18,8 @@ import { renderers } from "react-native-popup-menu";
 
 import AvatarBtn from "../components/settings/AvatarBtn";
 import { AuthContext } from "../context/authContext";
+import ProfileInfoEditor from "../components/settings/ProfileInfoEditor";
+import { trimObjectStrings } from "../util/stringFormatter";
 
 const { SlideInMenu } = renderers;
 
@@ -82,7 +85,7 @@ const BottomMenu = () => {
   };
 
   return (
-    <View>
+    <View style={styles.bottomMenuContainer}>
       <Menu name="numbers" renderer={SlideInMenu}>
         <MenuTrigger
           children={<AvatarBtn uri={avatar} />}
@@ -124,19 +127,90 @@ const BottomMenu = () => {
 
 export default function Settings() {
   const { user } = useContext(AuthContext);
+  const currentValue = {
+    username: user.data.username,
+    firstName: user.data.firstName,
+    lastName: user.data.lastName,
+  };
+  const [isEditing, setIsEditing] = useState(false);
+  const [patrollerData, setPatrollerData] = useState(currentValue);
+
+  const onCancelHandler = () => {
+    setIsEditing(false);
+    setPatrollerData(currentValue);
+  };
+  const onUpdateHandler = async () => {
+    setIsEditing(false);
+    const trimData = trimObjectStrings(patrollerData);
+    console.log(trimData);
+    const docRef = doc(db, "patrollers", user.data.docId);
+    try {
+      await setDoc(docRef, trimData, { merge: true });
+      alert("Document successfully updated!");
+    } catch (error) {
+      console.log("Error updating document:", error);
+    }
+  };
+
   return (
     <MenuProvider>
       <ScrollView>
         <BottomMenu />
-        <Text
-          style={styles.patrollerName}
-        >{`${user.data.firstName} ${user.data.lastName}`}</Text>
+        <View style={styles.editorContainer}>
+          {isEditing ? (
+            <View style={styles.actionIconContainer}>
+              <Feather
+                name="check"
+                size={24}
+                color="black"
+                onPress={onUpdateHandler}
+              />
+              <Feather
+                name="x"
+                size={24}
+                color="black"
+                onPress={onCancelHandler}
+              />
+            </View>
+          ) : (
+            <Feather
+              name="edit"
+              size={26}
+              color="black"
+              style={{ alignSelf: "flex-end" }}
+              onPress={() => setIsEditing(true)}
+            />
+          )}
+
+          <ProfileInfoEditor
+            setData={setPatrollerData}
+            propKey="username"
+            label="USERNAME"
+            currentValue={patrollerData.username}
+            isEditing={isEditing}
+          />
+          <ProfileInfoEditor
+            setData={setPatrollerData}
+            propKey="firstName"
+            label="FIRST NAME"
+            currentValue={patrollerData.firstName}
+            isEditing={isEditing}
+          />
+          <ProfileInfoEditor
+            setData={setPatrollerData}
+            propKey="lastName"
+            label="LAST NAME"
+            currentValue={patrollerData.lastName}
+            isEditing={isEditing}
+          />
+        </View>
       </ScrollView>
     </MenuProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  bottomMenuContainer: { marginTop: 8 },
   triggerOuterStyle: {
     justifyContent: "center",
     alignSelf: "center",
@@ -168,9 +242,11 @@ const styles = StyleSheet.create({
     gap: 16,
     alignItems: "center",
   },
-  patrollerName: {
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "bold",
+  editorContainer: {
+    gap: 20,
+    paddingVertical: 6,
+    width: "80%",
+    alignSelf: "center",
   },
+  actionIconContainer: { alignSelf: "flex-end", flexDirection: "row", gap: 12 },
 });
