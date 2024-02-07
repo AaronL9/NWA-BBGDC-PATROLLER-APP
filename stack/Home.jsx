@@ -186,7 +186,11 @@ export default function Home() {
       <Stack.Screen
         name="Chat"
         component={Chat}
-        options={{ animation: "fade_from_bottom" }}
+        options={({ route }) => ({
+          animation: "fade_from_bottom",
+          headerTitle: route.params?.chatTitle,
+          headerTitleStyle: { fontSize: 16 },
+        })}
       />
       <Stack.Screen
         name="PatrollerMap"
@@ -198,6 +202,7 @@ export default function Home() {
         component={Settings}
         options={{
           animation: "fade_from_bottom",
+          headerTitle: "Profile",
         }}
       />
     </Stack.Navigator>

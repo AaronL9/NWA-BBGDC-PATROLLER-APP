@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View, Text } from "react-native";
+import { ScrollView, StyleSheet, View, Text, Alert } from "react-native";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { Colors } from "../constants/colors";
 import * as ImagePicker from "expo-image-picker";
@@ -73,6 +73,9 @@ const BottomMenu = () => {
 
           const downloadURL = await getDownloadURL(snapshot.ref);
           setAvatar(downloadURL);
+
+          const docRef = doc(db, "patrollers", user.data.docId);
+          await setDoc(docRef, { avatarUrl: downloadURL }, { merge: true });
         } catch (error) {
           console.error("Error uploading file:", error);
         }
@@ -146,7 +149,7 @@ export default function Settings() {
     const docRef = doc(db, "patrollers", user.data.docId);
     try {
       await setDoc(docRef, trimData, { merge: true });
-      alert("Document successfully updated!");
+      Alert.alert("Success", "your personal information is updated");
     } catch (error) {
       console.log("Error updating document:", error);
     }
