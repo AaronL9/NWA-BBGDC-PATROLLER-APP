@@ -80,6 +80,7 @@ function AuthContextProvider({ children }) {
       }
       setLoading(false);
       setAuthenticating(false);
+      console.log(JSON.stringify(user, null, 2));
     });
     return unsubscribe;
   }, []);

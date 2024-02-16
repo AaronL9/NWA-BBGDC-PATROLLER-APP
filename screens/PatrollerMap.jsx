@@ -46,13 +46,14 @@ const PatrollerMap = () => {
     <MapView
       style={{ flex: 1 }}
       initialRegion={{
-        latitude: patrollerLocation?.latitude || 16.072164663721217,
-        longitude: patrollerLocation?.longitude || 120.34181320353657,
+        latitude: patrollerLocation?.latitude ?? 16.072164663721217,
+        longitude: patrollerLocation?.longitude ?? 120.34181320353657,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       }}
       zoomEnabled
       mapType="hybrid"
+      loadingEnabled
     >
       {patrollerLocation && (
         <>
@@ -67,11 +68,11 @@ const PatrollerMap = () => {
         </>
       )}
       <Marker
+        title="Reported Location"
         coordinate={{
           latitude: 16.04718626335265,
           longitude: 120.34235330268457,
         }}
-        title="Reported Location"
       />
     </MapView>
   );

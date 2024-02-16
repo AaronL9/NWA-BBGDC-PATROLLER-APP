@@ -31,7 +31,7 @@ import { trimObjectStrings } from "../util/stringFormatter";
 const { SlideInMenu } = renderers;
 
 const BottomMenu = () => {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
 
   const verifyCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
