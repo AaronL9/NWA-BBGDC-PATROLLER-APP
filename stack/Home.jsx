@@ -28,7 +28,7 @@ const Stack = createNativeStackNavigator();
 
 function CustomDrawerContent(props) {
   const navigation = useNavigation();
-  const { user, authenticating, logout, avatar } = useContext(AuthContext);
+  const { user, authenticating, logout } = useContext(AuthContext);
   return (
     <DrawerContentScrollView contentContainerStyle={{ flex: 1 }} {...props}>
       <View
@@ -42,7 +42,9 @@ function CustomDrawerContent(props) {
       >
         <Image
           source={
-            avatar ? { uri: avatar } : require("../assets/profile-circle.png")
+            user.data.avatarUrl
+              ? { uri: user.data.avatarUrl }
+              : require("../assets/profile-circle.png")
           }
           style={{ width: 35, height: 35, borderRadius: 17.5 }}
         />
@@ -117,11 +119,11 @@ export default function Home() {
   const { user, setPatrollerLocation } = useContext(AuthContext);
   const [location, setLocation] = useState(null);
 
-  const isUserDataLoaded = !!user?.data && !!user?.data?.docId;
+  const isUserDataLoaded = !!user?.data && !!user?.data?.uid;
 
   useLayoutEffect(() => {
     if (isUserDataLoaded) {
-      const patrolLocationRef = doc(db, "patrollers", user.data.docId);
+      const patrolLocationRef = doc(db, "patrollers", user.data.uid);
 
       const startLocationTracking = async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -132,8 +134,8 @@ export default function Home() {
 
         const locationSubscriber = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.Highest,
-            timeInterval: 5000,
+            accuracy: Location.Accuracy.BestForNavigation,
+            distanceInterval: 5,
           },
           (newLocation) => {
             const newCoords = newLocation.coords;

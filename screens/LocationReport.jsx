@@ -11,7 +11,7 @@ function LocationCard() {
       style={styles.locationCard}
     >
       <FontAwesome5 name="location-arrow" size={24} color="white" />
-      <Text style={styles.locationText}>188 Las Vegas, Bonuan Gueset</Text>
+      <Text style={styles.locationText}>Upang</Text>
     </TouchableOpacity>
   );
 }

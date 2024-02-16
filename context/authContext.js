@@ -1,20 +1,20 @@
 import { createContext, useState, useEffect } from "react";
-import { query, collection, where, getDocs } from "@firebase/firestore";
-import { getDownloadURL, ref } from "firebase/storage";
 import { signInWithCustomToken, signOut } from "firebase/auth";
-import { auth, db, storage } from "../config/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../config/firebase";
 
 export const AuthContext = createContext({
-  login: () => {},
-  logout: () => {},
+  user: {},
+  avatar: "",
   isAuthenticated: false,
   authenticating: false,
   authError: null,
-  user: {},
   patrollerLocation: {},
-  setPatrollerLocation: () => {},
-  avatar: "",
+  login: () => {},
+  logout: () => {},
+  setUser: () => {},
   setAvatar: () => {},
+  setPatrollerLocation: () => {},
 });
 
 function AuthContextProvider({ children }) {
@@ -29,7 +29,7 @@ function AuthContextProvider({ children }) {
     setAuthenticating(true);
     try {
       const response = await fetch(
-        `https://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/patroller/login`,
+        `http://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/patroller/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -40,21 +40,31 @@ function AuthContextProvider({ children }) {
       const json = await response.json();
 
       if (!response.ok) {
-        setAuthError(json.error);
-        setAuthenticating(false);
-        return;
+        throw new Error(json.error);
       }
 
-      await signInWithCustomToken(auth, json.token);
+      const { user: userInfo } = await signInWithCustomToken(auth, json.token);
+
+      if (userInfo) {
+        const { claims } = await userInfo.getIdTokenResult();
+        if (!claims?.patroller) {
+          setUser({ data: null, isAuthenticated: false });
+          logout();
+          throw new Error("you don't have permission to access this app");
+        }
+      }
+      setAuthError(null);
+      setAuthenticating(false);
     } catch (error) {
       setAuthenticating(false);
-      setAuthError(error);
+      setAuthError(error.message);
     }
   };
 
   async function logout() {
     try {
       await signOut(auth);
+      setUser({ data: null, isAuthenticated: false });
     } catch (error) {
       console.log(error.code, error.message);
     }
@@ -63,39 +73,20 @@ function AuthContextProvider({ children }) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        try {
-          const q = query(
-            collection(db, "patrollers"),
-            where("uid", "==", user.uid)
-          );
-          const querySnapshot = await getDocs(q);
-          const doc = querySnapshot.docs[0];
-          const userData = { ...doc.data(), docId: doc.id };
-
-          setUser({ isAuthenticated: true, data: userData });
-        } catch (error) {
-          console.log("Fetch User Data Error: ", error);
-        }
-        try {
-          const uri = await getDownloadURL(
-            ref(storage, `patrollers/${user.uid}/profile_pic`)
-          );
-          setAvatar(uri);
-        } catch (error) {
-          setAvatar(null);
-        }
-      } else {
-        setUser({ data: null, isAuthenticated: false });
+        const docRef = doc(db, "patrollers", user.uid);
+        const docSnap = await getDoc(docRef);
+        const data = docSnap.data();
+        delete data.password;
+        setUser({ isAuthenticated: true, data });
       }
       setLoading(false);
-      setAuthenticating(false);
-      setAuthError(null);
     });
     return unsubscribe;
   }, []);
 
   const value = {
     user,
+    setUser,
     login,
     logout,
     authenticating,

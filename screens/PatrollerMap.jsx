@@ -4,24 +4,21 @@ import MapView, { Marker, Polyline } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 import { AuthContext } from "../context/authContext";
 
-const PatrollerMabp = () => {
+const PatrollerMap = () => {
   const { patrollerLocation } = useContext(AuthContext);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
 
   const renderRoute = async () => {
     try {
-      const apiKey = process.env.EXPO_PUBLIC_API_KEY; // Replace with your API key
+      const apiKey = process.env.EXPO_PUBLIC_API_KEY;
       const origin = `${patrollerLocation.latitude},${patrollerLocation.longitude}`;
-      const destination = `${16.071812312696814},${120.33697799415297}`;
+      const destination = `${16.04718626335265},${120.34235330268457}`;
 
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`
       );
 
       const data = await response.json();
-
-      console.log(patrollerLocation);
-      console.log("Directions API Response:", data);
 
       if (data.status === "OK") {
         const points = data.routes[0].overview_polyline.points;
@@ -32,10 +29,10 @@ const PatrollerMabp = () => {
         }));
         setRouteCoordinates(routeCoordinates);
       } else {
-        console.error("Error fetching directions:", data.status);
+        alert("Error fetching directions:", data.status);
       }
     } catch (error) {
-      console.error("Error fetching directions:", error.message);
+      alert("Error fetching directions:", error.message);
     }
   };
 
@@ -49,11 +46,13 @@ const PatrollerMabp = () => {
     <MapView
       style={{ flex: 1 }}
       initialRegion={{
-        latitude: patrollerLocation?.latitude || 0,
-        longitude: patrollerLocation?.longitude || 0,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        latitude: patrollerLocation?.latitude || 16.072164663721217,
+        longitude: patrollerLocation?.longitude || 120.34181320353657,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
       }}
+      zoomEnabled
+      mapType="hybrid"
     >
       {patrollerLocation && (
         <>
@@ -69,8 +68,8 @@ const PatrollerMabp = () => {
       )}
       <Marker
         coordinate={{
-          latitude: 16.071812312696814,
-          longitude: 120.33697799415297,
+          latitude: 16.04718626335265,
+          longitude: 120.34235330268457,
         }}
         title="Reported Location"
       />
@@ -78,4 +77,4 @@ const PatrollerMabp = () => {
   );
 };
 
-export default PatrollerMabp;
+export default PatrollerMap;
