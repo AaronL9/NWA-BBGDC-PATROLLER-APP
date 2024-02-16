@@ -54,7 +54,6 @@ function AuthContextProvider({ children }) {
         }
       }
       setAuthError(null);
-      setAuthenticating(false);
     } catch (error) {
       setAuthenticating(false);
       setAuthError(error.message);
@@ -80,6 +79,7 @@ function AuthContextProvider({ children }) {
         setUser({ isAuthenticated: true, data });
       }
       setLoading(false);
+      setAuthenticating(false);
     });
     return unsubscribe;
   }, []);
