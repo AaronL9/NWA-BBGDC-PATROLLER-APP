@@ -45,3 +45,6 @@ eas.json
 
 #debugger
 %ProgramData%
+
+# others
+legacy_code.js

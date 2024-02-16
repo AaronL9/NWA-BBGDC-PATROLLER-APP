@@ -1,4 +1,4 @@
-import { useContext, useLayoutEffect, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { View, Text, Image } from "react-native";
 import { doc, updateDoc } from "firebase/firestore";
 import { AuthContext } from "../context/authContext";
@@ -121,55 +121,73 @@ export default function Home() {
 
   const isUserDataLoaded = !!user?.data && !!user?.data?.uid;
 
-  useLayoutEffect(() => {
-    if (isUserDataLoaded) {
-      const patrolLocationRef = doc(db, "patrollers", user.data.uid);
-
-      const startLocationTracking = async () => {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          console.error("Location permission not granted");
-          return;
-        }
-
-        const locationSubscriber = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.BestForNavigation,
-            distanceInterval: 5,
+  useEffect(() => {
+    const updatePatrollerLocation = async () => {
+      try {
+        const patrolLocationRef = doc(db, "patrollers", user.data.uid);
+        updateDoc(patrolLocationRef, {
+          patrollerLocation: {
+            lat: location.latitude,
+            lng: location.longitude,
           },
-          (newLocation) => {
-            const newCoords = newLocation.coords;
-            // Check if the location has changed
-            if (
-              !location ||
-              location.latitude !== newCoords.latitude ||
-              location.longitude !== newCoords.longitude
-            ) {
-              setLocation(newCoords);
-              setPatrollerLocation({
-                latitude: newCoords.latitude,
-                longitude: newCoords.longitude,
-              });
-              console.log("My location: ", newCoords);
-              // Send location update to Firestore
-              updateDoc(patrolLocationRef, {
-                patrollerLocation: {
-                  lat: newCoords.latitude,
-                  lng: newCoords.longitude,
-                },
-              });
-            }
+        });
+        console.log("updating");
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    updatePatrollerLocation();
+  }, [location]);
+
+  useLayoutEffect(() => {
+    let locationSubscriber;
+
+    const startLocationTracking = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.error("Location permission not granted");
+        return;
+      }
+
+      locationSubscriber = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 5,
+        },
+        (newLocation) => {
+          const newCoords = newLocation.coords;
+          // Check if the location has changed
+          if (
+            !location ||
+            location.latitude !== newCoords.latitude ||
+            location.longitude !== newCoords.longitude
+          ) {
+            setLocation(newCoords);
+            setPatrollerLocation({
+              latitude: newCoords.latitude,
+              longitude: newCoords.longitude,
+            });
+            console.log("My location: ", newCoords);
           }
-        );
+        }
+      );
+    };
 
-        return () => {
-          locationSubscriber.remove();
-        };
-      };
+    const cleanup = () => {
+      if (locationSubscriber) {
+        locationSubscriber.remove();
+      }
+    };
 
+    if (isUserDataLoaded) {
       startLocationTracking();
+
+      return cleanup; // Cleanup when the component unmounts or dependencies change
     }
-  }, []);
+
+    // Cleanup when the user data is not loaded
+    cleanup();
+  }, [isUserDataLoaded, user]);
 
   return (
     <Stack.Navigator
