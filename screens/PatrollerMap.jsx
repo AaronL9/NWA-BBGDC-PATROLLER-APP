@@ -1,6 +1,6 @@
 // PatrollerMabp.js
 import React, { useState, useContext, useEffect } from "react";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 import { AuthContext } from "../context/authContext";
 
@@ -54,6 +54,7 @@ const PatrollerMap = () => {
       zoomEnabled
       mapType="hybrid"
       loadingEnabled
+      provider={PROVIDER_GOOGLE}
     >
       {patrollerLocation && (
         <>
