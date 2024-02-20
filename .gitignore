@@ -41,11 +41,7 @@ yarn-error.*
 !.vscode/extensions.json
 
 # Project Files
-eas.json
-app.config.js
-app.json
 google-services.json
-secrets.json
 
 #debugger
 %ProgramData%
