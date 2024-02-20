@@ -194,6 +194,7 @@ export default function Home() {
 
   useEffect(() => {
     const updatePatrollerLocation = async () => {
+      if (!location) return;
       try {
         const patrolLocationRef = doc(db, "patrollers", user.data.uid);
         updateDoc(patrolLocationRef, {
