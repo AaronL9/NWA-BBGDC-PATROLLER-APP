@@ -1,27 +1,52 @@
 import { TouchableOpacity, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import { db } from "../config/firebase";
 
-function LocationCard() {
+function LocationCard({ address, coords }) {
   const navigation = useNavigation();
 
   return (
     <TouchableOpacity
-      onPress={() => navigation.navigate("PatrollerMap")}
+      onPress={() => navigation.navigate("PatrollerMap", { coords })}
       style={styles.locationCard}
     >
       <FontAwesome5 name="location-arrow" size={24} color="white" />
-      <Text style={styles.locationText}>Upang</Text>
+      <Text style={styles.locationText}>{address}</Text>
     </TouchableOpacity>
   );
 }
 
 export default function LocationReport() {
+  const [liveLocation, setLiveLocation] = useState([]);
+
+  useEffect(() => {
+    const locationRef = collection(db, "live_location");
+
+    const unsubscribe = onSnapshot(locationRef, (snapshot) => {
+      const locations = snapshot.docs.map((doc) => ({
+        docID: doc.id,
+        ...doc.data(),
+      }));
+      setLiveLocation(locations);
+    });
+
+    return unsubscribe;
+  }, []);
+
   return (
     <View style={styles.rootContainer}>
       <Text style={styles.bodyTitle}>Reported Location</Text>
-      <View>
-        <LocationCard />
+      <View style={{ gap: 8 }}>
+        {liveLocation.map((data) => (
+          <LocationCard
+            key={data.docID}
+            address={data.location}
+            coords={data.coords}
+          />
+        ))}
       </View>
     </View>
   );

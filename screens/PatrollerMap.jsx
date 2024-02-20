@@ -1,18 +1,23 @@
 // PatrollerMabp.js
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useLayoutEffect } from "react";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import polyline from "@mapbox/polyline";
 import { AuthContext } from "../context/authContext";
+import { Ionicons } from "@expo/vector-icons";
+import { TouchableOpacity } from "react-native";
 
-const PatrollerMap = () => {
+const PatrollerMap = ({ navigation, route }) => {
   const { patrollerLocation } = useContext(AuthContext);
+  const { coords } = route.params;
+
   const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const renderRoute = async () => {
     try {
       const apiKey = process.env.EXPO_PUBLIC_API_KEY;
       const origin = `${patrollerLocation.latitude},${patrollerLocation.longitude}`;
-      const destination = `${16.04718626335265},${120.34235330268457}`;
+      const destination = `${coords.lat},${coords.lng}`;
 
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}`
@@ -36,11 +41,27 @@ const PatrollerMap = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await renderRoute();
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     if (patrollerLocation) {
       renderRoute();
     }
-  }, [patrollerLocation]);
+  }, [patrollerLocation, refreshing]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={handleRefresh}>
+          <Ionicons name="refresh" size={24} color="white" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   return (
     <MapView
@@ -71,8 +92,8 @@ const PatrollerMap = () => {
       <Marker
         title="Reported Location"
         coordinate={{
-          latitude: 16.04718626335265,
-          longitude: 120.34235330268457,
+          latitude: coords.lat,
+          longitude: coords.lng,
         }}
       />
     </MapView>

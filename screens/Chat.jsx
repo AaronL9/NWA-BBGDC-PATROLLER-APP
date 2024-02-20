@@ -12,26 +12,11 @@ import {
   orderBy,
   query,
   onSnapshot,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { AuthContext } from "../context/authContext";
-import { ActivityIndicator, View, Text } from "react-native";
-
-const locationMessage = [
-  {
-    _id: 1, // Unique message ID
-    text: "hello tehre", // Optional: You can include a text message along with the location
-    location: {
-      latitude: 123.456, // Replace with the actual latitude
-      longitude: 456.789, // Replace with the actual longitude
-    },
-    createdAt: new Date(), // Date when the message is created
-    user: {
-      _id: 1, // ID of the user who sent the message
-      name: "John", // Name of the user who sent the message
-    },
-  },
-];
+import { ActivityIndicator } from "react-native";
 
 export default function Chat({ route }) {
   const { user } = useContext(AuthContext);
@@ -63,11 +48,12 @@ export default function Chat({ route }) {
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, messages)
     );
-    const { _id, createdAt, text, user } = messages[0];
-    console.log(_id, createdAt.toString());
+
+    const { _id, text, user } = messages[0];
+
     const nestedDocRef = doc(db, "rooms", roomId, "chats", _id);
     setDoc(nestedDocRef, {
-      createdAt,
+      createdAt: serverTimestamp(),
       text,
       user,
     });

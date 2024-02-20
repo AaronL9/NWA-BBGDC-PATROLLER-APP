@@ -1,11 +1,15 @@
 import { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { View, Text, Image } from "react-native";
-import { doc, updateDoc } from "firebase/firestore";
 import { AuthContext } from "../context/authContext";
-import { db } from "../config/firebase";
 import { Colors } from "../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import Constants from "expo-constants";
+
+import { doc, updateDoc, setDoc } from "firebase/firestore";
+import { db } from "../config/firebase";
 
 import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -25,6 +29,49 @@ import PatrollerMap from "../screens/PatrollerMap.jsx";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === "android") {
+    Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return;
+    }
+    token = await Notifications.getExpoPushTokenAsync({
+      projectId: Constants.expoConfig.extra.eas.projectId,
+    });
+    console.log(token);
+  } else {
+    alert("Must use physical device for Push Notifications");
+  }
+
+  return token.data;
+}
 
 function CustomDrawerContent(props) {
   const navigation = useNavigation();
@@ -122,6 +169,30 @@ export default function Home() {
   const isUserDataLoaded = !!user?.data && !!user?.data?.uid;
 
   useEffect(() => {
+    registerForPushNotificationsAsync().then((token) => {
+      if (!isUserDataLoaded) return;
+
+      const tokenRef = doc(db, "device_push_token", user.data.uid);
+      setDoc(tokenRef, { token }, { merge: true });
+    });
+
+    const subscription1 = Notifications.addNotificationReceivedListener(() => {
+      console.log("NOTIFICATION RECEIVED HANDLED");
+    });
+
+    const subscription2 = Notifications.addNotificationResponseReceivedListener(
+      () => {
+        console.log("NOTIFICATION RESPONSE HANLDED");
+      }
+    );
+
+    return () => {
+      subscription1.remove();
+      subscription2.remove();
+    };
+  }, []);
+
+  useEffect(() => {
     const updatePatrollerLocation = async () => {
       try {
         const patrolLocationRef = doc(db, "patrollers", user.data.uid);
@@ -215,7 +286,10 @@ export default function Home() {
       <Stack.Screen
         name="PatrollerMap"
         component={PatrollerMap}
-        options={{ animation: "fade_from_bottom" }}
+        options={{
+          headerTitle: "Patroller Map",
+          animation: "fade_from_bottom",
+        }}
       />
       <Stack.Screen
         name="Settings"

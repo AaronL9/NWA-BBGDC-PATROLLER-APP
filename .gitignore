@@ -40,8 +40,10 @@ yarn-error.*
 .vscode/*
 !.vscode/extensions.json
 
-#eas
+# Project Files
 eas.json
+app.json
+google-services.json
 
 #debugger
 %ProgramData%
