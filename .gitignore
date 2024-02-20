@@ -42,8 +42,10 @@ yarn-error.*
 
 # Project Files
 eas.json
+app.config.js
 app.json
 google-services.json
+secrets.json
 
 #debugger
 %ProgramData%
