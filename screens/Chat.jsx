@@ -55,7 +55,7 @@ export default function Chat({ route }) {
 
     try {
       const response = await fetch(
-        `http://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/push/notify-admin`,
+        `https://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/push/notify-admin`,
         {
           method: "POST",
           body: JSON.stringify({ adminId }),
