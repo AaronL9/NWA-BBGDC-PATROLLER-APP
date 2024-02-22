@@ -75,8 +75,8 @@ function AuthContextProvider({ children }) {
         const docRef = doc(db, "patrollers", user.uid);
         const docSnap = await getDoc(docRef);
         const data = docSnap.data();
-        delete data.password;
-        setUser({ isAuthenticated: true, data });
+        console.log(JSON.stringify(user, null, 2));
+        setUser({ isAuthenticated: true, data, token: user.accessToken });
       }
       setLoading(false);
       setAuthenticating(false);

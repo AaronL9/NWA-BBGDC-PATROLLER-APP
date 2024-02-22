@@ -12,7 +12,15 @@ import { Colors } from "../constants/colors";
 import * as ImagePicker from "expo-image-picker";
 import { db, storage } from "../config/firebase";
 import { getDownloadURL, uploadBytes, ref } from "firebase/storage";
-import { doc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  query,
+  where,
+  collection,
+  getDocs,
+} from "firebase/firestore";
 
 import {
   MenuProvider,
@@ -203,13 +211,26 @@ export default function Settings() {
         ...prev,
         data: { ...prev.data, ...patrollerData },
       }));
+
+      const q = query(
+        collection(db, "rooms"),
+        where("patroller.id", "==", user.data.uid)
+      );
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (document) => {
+        const docRef = doc(db, "rooms", document.id);
+        await updateDoc(docRef, {
+          "patroller.displayName": `${patrollerData.firstName} ${patrollerData.lastName}`,
+        });
+      });
+
       Alert.alert(
         "Success",
         "Your profile details have been successfully saved."
       );
     } catch (error) {
       Alert.alert(
-        "Something Went",
+        "Something Went Wrong",
         "We Encountered an Issue While Saving Your Changes."
       );
       console.log("Error updating document:", error);

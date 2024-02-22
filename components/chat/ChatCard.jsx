@@ -2,8 +2,9 @@ import { StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Colors } from "../../constants/colors";
 
-export default function ChatCard({ name, uid }) {
+export default function ChatCard({ name, roomId, adminId }) {
   const navigation = useNavigation();
+  console.log(roomId);
   return (
     <View style={styles.cardContainer}>
       <Pressable
@@ -11,8 +12,9 @@ export default function ChatCard({ name, uid }) {
         style={styles.pressContainer}
         onPress={() =>
           navigation.navigate("Chat", {
-            adminId: uid,
+            roomId,
             chatTitle: name,
+            adminId,
           })
         }
       >

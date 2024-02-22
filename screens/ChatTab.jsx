@@ -1,23 +1,41 @@
 import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 
 import ChatCard from "../components/chat/ChatCard";
 import { Colors } from "../constants/colors";
+import { AuthContext } from "../context/authContext";
 
 export default function ChatList() {
-  const [admins, setAdmins] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      query(collection(db, "admins"), orderBy("order", "asc")),
+      query(
+        collection(db, "rooms"),
+        where("patroller.id", "==", user.data.uid),
+        orderBy("updatedAt", "desc")
+      ),
       (querySnapshot) => {
-        const data = querySnapshot.docs.map((doc) => doc.data());
-        setAdmins(data);
+        const data = querySnapshot.docs.map((doc) => ({
+          docId: doc.id,
+          admin: doc.data().admin,
+        }));
+        setRooms(data);
         setLoading(false);
+      },
+      (error) => {
+        console.error("Error getting documents: ", error);
       }
     );
 
@@ -30,8 +48,13 @@ export default function ChatList() {
         <Text style={styles.chatListTitle}>Chat with Admins</Text>
       </View>
       {loading && <ActivityIndicator size="large" color="#000000" />}
-      {admins.map((admin, index) => (
-        <ChatCard key={index} name={admin.displayName} uid={admin.uid} />
+      {rooms.map((data) => (
+        <ChatCard
+          key={data.docId}
+          name={data.admin.displayName}
+          adminId={data.admin.id}
+          roomId={data.docId}
+        />
       ))}
     </View>
   );
