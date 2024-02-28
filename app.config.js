@@ -1,8 +1,8 @@
 module.exports = {
   expo: {
-    name: "mobile",
+    name: "Neigborhood Watch - patroller",
     slug: "patroller-app",
-    version: "1.0.3",
+    version: "1.0.4",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -31,7 +31,11 @@ module.exports = {
     web: {
       favicon: "./assets/favicon.png",
     },
-    plugins: [["expo-notifications"]],
+    plugins: [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      ["expo-notifications", { sounds: ["asset:/assets/mySound.wav"] }],
+    ],
     extra: {
       eas: {
         projectId: "0ef8837e-ada4-451f-ad4d-138cc77933b4",
