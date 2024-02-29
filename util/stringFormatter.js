@@ -35,3 +35,36 @@ export function trimObjectStrings(obj) {
 
   return trimmedObject;
 }
+
+export const extractErrorMessage = (errorCode) => {
+  if (!errorCode || typeof errorCode !== "string") {
+    return "An unexpected error occurred";
+  }
+
+  if (errorCode.startsWith("auth/")) {
+    const errorMessage = errorCode.split("/");
+    errorMessage.shift();
+    const extractErrorMessage = errorMessage[0].split("-").join(" ");
+
+    const formattedMessage =
+      extractErrorMessage.charAt(0).toUpperCase() +
+      extractErrorMessage.slice(1);
+
+    return formattedMessage;
+  } else {
+    return errorCode;
+  }
+};
+
+export function formatPhoneNumber(input, setError) {
+  if (/^\+639\d{9}$/.test(input) && input.length === 13) {
+    return input;
+  }
+
+  if (/^09\d{9}$/.test(input) && input.length === 11) {
+    return "+63" + input.slice(1);
+  }
+
+  setError("Invalid phone number");
+  return null;
+}

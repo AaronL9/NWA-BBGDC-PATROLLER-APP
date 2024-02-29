@@ -1,3 +1,4 @@
+import * as ImagePicker from "expo-image-picker";
 import { useContext, useState } from "react";
 import {
   ScrollView,
@@ -9,18 +10,8 @@ import {
 } from "react-native";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { Colors } from "../constants/colors";
-import * as ImagePicker from "expo-image-picker";
-import { db, storage } from "../config/firebase";
-import { getDownloadURL, uploadBytes, ref } from "firebase/storage";
-import {
-  doc,
-  setDoc,
-  updateDoc,
-  query,
-  where,
-  collection,
-  getDocs,
-} from "firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
+import storage from "@react-native-firebase/storage";
 
 import {
   MenuProvider,
@@ -121,23 +112,22 @@ const BottomMenu = () => {
 
   const onUploadProfilePicture = async (uri) => {
     try {
-      const file = await fetch(uri);
-      const blob = await file.blob();
+      await storage()
+        .ref(`patrollers/${user.data.uid}/profile_pic`)
+        .putFile(uri);
+      const downloadURL = await storage()
+        .ref(`patrollers/${user.data.uid}/profile_pic`)
+        .getDownloadURL();
 
-      const storageRef = ref(
-        storage,
-        `patrollers/${user.data.uid}/profile_pic`
-      );
-
-      const snapshot = await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(snapshot.ref);
       setUser((prev) => ({
         ...prev,
         data: { ...prev.data, avatarUrl: downloadURL },
       }));
 
-      const docRef = doc(db, "patrollers", user.data.uid);
-      await setDoc(docRef, { avatarUrl: downloadURL }, { merge: true });
+      await firestore()
+        .collection("patrollers")
+        .doc(user.data.uid)
+        .update({ avatarUrl: downloadURL });
     } catch (error) {
       console.error("Error uploading file:", error);
     }
@@ -187,7 +177,6 @@ const BottomMenu = () => {
 export default function Settings() {
   const { user, setUser } = useContext(AuthContext);
   const currentValue = {
-    username: user.data.username,
     firstName: user.data.firstName,
     lastName: user.data.lastName,
     address: user.data.address,
@@ -204,24 +193,30 @@ export default function Settings() {
     setLoading(true);
     setIsEditing(false);
     const trimData = trimObjectStrings(patrollerData);
+
     try {
-      const docRef = doc(db, "patrollers", user.data.uid);
-      await setDoc(docRef, trimData, { merge: true });
+      await firestore()
+        .collection("patrollers")
+        .doc(user.data.uid)
+        .update(trimData);
+
       setUser((prev) => ({
         ...prev,
-        data: { ...prev.data, ...patrollerData },
+        data: { ...prev.data, ...trimData },
       }));
 
-      const q = query(
-        collection(db, "rooms"),
-        where("patroller.id", "==", user.data.uid)
-      );
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await firestore()
+        .collection("rooms")
+        .where("patroller.id", "==", user.data.uid)
+        .get();
+
       querySnapshot.forEach(async (document) => {
-        const docRef = doc(db, "rooms", document.id);
-        await updateDoc(docRef, {
-          "patroller.displayName": `${patrollerData.firstName} ${patrollerData.lastName}`,
-        });
+        await firestore()
+          .collection("rooms")
+          .doc(document.id)
+          .update({
+            "patroller.displayName": `${trimData.firstName} ${trimData.lastName}`,
+          });
       });
 
       Alert.alert(
@@ -270,14 +265,6 @@ export default function Settings() {
               onPress={() => setIsEditing(true)}
             />
           )}
-
-          <ProfileInfoEditor
-            setData={setPatrollerData}
-            propKey="username"
-            label="USERNAME"
-            currentValue={patrollerData.username}
-            isEditing={isEditing}
-          />
           <ProfileInfoEditor
             setData={setPatrollerData}
             propKey="firstName"

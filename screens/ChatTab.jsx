@@ -1,14 +1,6 @@
 import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
 import { useContext, useEffect, useState } from "react";
-
-import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-} from "firebase/firestore";
-import { db } from "../config/firebase";
+import firestore from "@react-native-firebase/firestore";
 
 import ChatCard from "../components/chat/ChatCard";
 import { Colors } from "../constants/colors";
@@ -20,26 +12,20 @@ export default function ChatList() {
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(
-        collection(db, "rooms"),
-        where("patroller.id", "==", user.data.uid),
-        orderBy("updatedAt", "desc")
-      ),
-      (querySnapshot) => {
+    const subscriber = firestore()
+      .collection("rooms")
+      .where("patroller.id", "==", user.data.uid)
+      .orderBy("updatedAt", "desc")
+      .onSnapshot((querySnapshot) => {
         const data = querySnapshot.docs.map((doc) => ({
           docId: doc.id,
           admin: doc.data().admin,
         }));
         setRooms(data);
         setLoading(false);
-      },
-      (error) => {
-        console.error("Error getting documents: ", error);
-      }
-    );
+      });
 
-    return () => unsubscribe();
+    return () => subscriber();
   }, []);
 
   return (

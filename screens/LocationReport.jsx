@@ -1,9 +1,14 @@
-import { TouchableOpacity, StyleSheet, Text, View } from "react-native";
+import {
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { useEffect, useState } from "react";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { collection, getDocs, onSnapshot } from "firebase/firestore";
-import { db } from "../config/firebase";
+import firestore from "@react-native-firebase/firestore";
 
 function LocationCard({ address, coords }) {
   const navigation = useNavigation();
@@ -21,25 +26,28 @@ function LocationCard({ address, coords }) {
 
 export default function LocationReport() {
   const [liveLocation, setLiveLocation] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const locationRef = collection(db, "live_location");
+    const subscriber = firestore()
+      .collection("live_location")
+      .onSnapshot((querySnapshot) => {
+        const locations = querySnapshot.docs.map((doc) => ({
+          docID: doc.id,
+          ...doc.data(),
+        }));
+        setLiveLocation(locations);
+        setLoading(false);
+      });
 
-    const unsubscribe = onSnapshot(locationRef, (snapshot) => {
-      const locations = snapshot.docs.map((doc) => ({
-        docID: doc.id,
-        ...doc.data(),
-      }));
-      setLiveLocation(locations);
-    });
-
-    return unsubscribe;
+    return () => subscriber();
   }, []);
 
   return (
     <View style={styles.rootContainer}>
       <Text style={styles.bodyTitle}>Reported Location</Text>
       <View style={{ gap: 8 }}>
+        {loading && <ActivityIndicator size="large" color="black" />}
         {liveLocation.map((data) => (
           <LocationCard
             key={data.docID}

@@ -1,42 +1,31 @@
-import React, {
-  useState,
-  useCallback,
-  useContext,
-  useLayoutEffect,
-} from "react";
+import { useState, useCallback, useContext, useEffect } from "react";
 import { GiftedChat } from "react-native-gifted-chat";
-import {
-  collection,
-  doc,
-  setDoc,
-  orderBy,
-  query,
-  onSnapshot,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db } from "../config/firebase";
 import { AuthContext } from "../context/authContext";
 import { ActivityIndicator } from "react-native";
+import firestore from "@react-native-firebase/firestore";
 
 export default function Chat({ route }) {
   const { user } = useContext(AuthContext);
   const { roomId, adminId } = route.params;
   const [messages, setMessages] = useState([]);
 
-  useLayoutEffect(() => {
-    const collectionRef = collection(db, "rooms", roomId, "chats");
-    const q = query(collectionRef, orderBy("createdAt", "desc"));
+  useEffect(() => {
+    const subscriber = firestore()
+      .collection("rooms")
+      .doc(roomId)
+      .collection("chats")
+      .orderBy("createdAt", "desc")
+      .onSnapshot((querySnapshot) => {
+        if (!querySnapshot?.docs[0]?.data()?.createdAt) return;
+        const currentMessages = querySnapshot.docs.map((doc) => ({
+          ...doc.data(),
+          _id: doc.id,
+          createdAt: doc.data().createdAt.toDate(),
+        }));
+        setMessages(currentMessages);
+      });
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      if (!querySnapshot?.docs[0]?.data()?.createdAt) return;
-      const currentMessages = querySnapshot.docs.map((doc) => ({
-        ...doc.data(),
-        _id: doc.id,
-        createdAt: doc.data().createdAt.toDate(),
-      }));
-      setMessages(currentMessages);
-    });
-    return unsubscribe;
+    return () => subscriber();
   }, [roomId]);
 
   const onSend = useCallback(async (messages = []) => {
@@ -46,12 +35,16 @@ export default function Chat({ route }) {
 
     const { _id, text, user } = messages[0];
 
-    const nestedDocRef = doc(db, "rooms", roomId, "chats", _id);
-    await setDoc(nestedDocRef, {
-      createdAt: serverTimestamp(),
-      text,
-      user,
-    });
+    firestore()
+      .collection("rooms")
+      .doc(roomId)
+      .collection("chats")
+      .doc(_id)
+      .set({
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        text,
+        user,
+      });
 
     try {
       const response = await fetch(

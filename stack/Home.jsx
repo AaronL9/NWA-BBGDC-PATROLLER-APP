@@ -1,5 +1,5 @@
 import { useContext, useEffect, useLayoutEffect, useState } from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, Alert, Linking } from "react-native";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,9 +7,7 @@ import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-
-import { doc, updateDoc, setDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
+import firestore from "@react-native-firebase/firestore";
 
 import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -172,8 +170,10 @@ export default function Home() {
     registerForPushNotificationsAsync().then((token) => {
       if (!isUserDataLoaded) return;
 
-      const tokenRef = doc(db, "device_push_token", user.data.uid);
-      setDoc(tokenRef, { token }, { merge: true });
+      firestore()
+        .collection("device_push_token")
+        .doc(user.data.uid)
+        .set({ token }, { merge: true });
     });
 
     const subscription1 = Notifications.addNotificationReceivedListener(() => {
@@ -196,13 +196,15 @@ export default function Home() {
     const updatePatrollerLocation = async () => {
       if (!location) return;
       try {
-        const patrolLocationRef = doc(db, "patrollers", user.data.uid);
-        updateDoc(patrolLocationRef, {
-          patrollerLocation: {
-            lat: location.latitude,
-            lng: location.longitude,
-          },
-        });
+        firestore()
+          .collection("patrollers")
+          .doc(user.data.uid)
+          .update({
+            patrollerLocation: {
+              lat: location.latitude,
+              lng: location.longitude,
+            },
+          });
         console.log("updating");
       } catch (error) {
         console.log(error);
@@ -217,8 +219,15 @@ export default function Home() {
     const startLocationTracking = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        console.error("Location permission not granted");
-        return;
+        Alert.alert(
+          "Permission Denied",
+          "Please allow location to track your routes",
+          [
+            { text: "cancel" },
+            { text: "Go to settings", onPress: () => Linking.openSettings() },
+          ]
+        );
+        return false;
       }
 
       locationSubscriber = await Location.watchPositionAsync(
@@ -228,7 +237,6 @@ export default function Home() {
         },
         (newLocation) => {
           const newCoords = newLocation.coords;
-          // Check if the location has changed
           if (
             !location ||
             location.latitude !== newCoords.latitude ||

@@ -1,30 +1,71 @@
 import { View, StyleSheet, StatusBar, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { useContext, useState } from "react";
-import { loginFieldProps } from "../util/credentialFieldProps";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
 
+// firebase
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+
 // components
-import CredentialField from "../components/auth/CredentialField";
 import AuthButton from "../components/auth/AuthButton";
 import Header from "../components/Header";
 import ErrorLoginMessage from "../components/auth/ErrorLoginMessage";
 
+// utilities
+import { validatePhoneNumber } from "../util/formValidation";
+import {
+  extractErrorMessage,
+  formatPhoneNumber,
+} from "../util/stringFormatter";
+import SignInField from "../components/auth/SignInField";
+
 export default function Login() {
-  const authCtx = useContext(AuthContext);
-  const navigation = useNavigation();
+  const { setAuthenticating } = useContext(AuthContext);
 
-  const [credential, setCredential] = useState({
-    identifier: "",
-    passowrd: "",
-  });
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [code, setCode] = useState("");
+  const [confirm, setConfirm] = useState(null);
+  const [error, setError] = useState(null);
 
-  const loginInHandler = async () => {
-    await authCtx.login(credential);
+  const sendCodeHandler = async () => {
+    setError(null);
+    const formattedPhoneNumber = formatPhoneNumber(phoneNumber, setError);
+    if (!formattedPhoneNumber) return;
+    try {
+      setAuthenticating(true);
+
+      const userQuerySnapshot = await firestore()
+        .collection("patrollers")
+        .where("phoneNumber", "==", formattedPhoneNumber)
+        .limit(1)
+        .get();
+      if (userQuerySnapshot.empty) throw new Error("Unauthorize phone number");
+
+      const confirmation = await auth().signInWithPhoneNumber(
+        formattedPhoneNumber
+      );
+      setConfirm(confirmation);
+    } catch (error) {
+      console.log("Error sending code: ", error);
+      const errorMessage = error?.code || error?.message;
+      setError(extractErrorMessage(errorMessage));
+    } finally {
+      setAuthenticating(false);
+    }
   };
 
-  const inputProps = loginFieldProps(setCredential);
+  const confirmCode = async () => {
+    setError(null);
+    try {
+      setAuthenticating(true);
+      await confirm.confirm(code);
+    } catch (error) {
+      console.log("Invalid code: ", error.code);
+      setError(extractErrorMessage(error.code));
+      setAuthenticating(false);
+    }
+  };
 
   return (
     <View style={styles.rootContainer}>
@@ -34,14 +75,31 @@ export default function Login() {
           imageStyle={styles.headerImage}
         />
         <View style={styles.loginContainer}>
-          <View style={styles.inputContainerStyle}>
-            <CredentialField {...inputProps.identifier} />
-            <CredentialField {...inputProps.passowrd} />
-          </View>
-          {authCtx.authError && (
-            <ErrorLoginMessage message={authCtx.authError} />
+          {!confirm ? (
+            <>
+              <View style={styles.inputContainerStyle}>
+                <SignInField
+                  icon="phone-android"
+                  setValue={setPhoneNumber}
+                  placeholder="Phone Number"
+                />
+              </View>
+              {error && <ErrorLoginMessage message={error} />}
+              <AuthButton title={"Send code"} onPress={sendCodeHandler} />
+            </>
+          ) : (
+            <>
+              <View style={styles.inputContainerStyle}>
+                <SignInField
+                  icon="confirmation-number"
+                  setValue={setCode}
+                  placeholder="Code"
+                />
+              </View>
+              {error && <ErrorLoginMessage message={error} />}
+              <AuthButton title={"Confirm"} onPress={confirmCode} />
+            </>
           )}
-          <AuthButton title={"Login"} onPress={loginInHandler} />
         </View>
       </ScrollView>
     </View>
