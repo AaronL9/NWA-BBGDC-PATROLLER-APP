@@ -34,7 +34,7 @@ module.exports = {
     plugins: [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      ["expo-notifications", { sounds: ["asset:/assets/mySound.wav"] }],
+      ["expo-notifications", { sounds: ["./assets/mySound.wav"] }],
     ],
     extra: {
       eas: {
