@@ -5,7 +5,7 @@ import { ActivityIndicator } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 
 export default function Chat({ route }) {
-  const { user } = useContext(AuthContext);
+  const { user: currentUser } = useContext(AuthContext);
   const { roomId, adminId } = route.params;
   const [messages, setMessages] = useState([]);
 
@@ -54,7 +54,7 @@ export default function Chat({ route }) {
           body: JSON.stringify({ adminId }),
           headers: {
             "Content-Type": "application/json",
-            Authorization: user.token,
+            Authorization: currentUser.token,
           },
         }
       );
@@ -77,7 +77,7 @@ export default function Chat({ route }) {
       onSend={(messages) => onSend(messages)}
       renderLoading={() => <ActivityIndicator size={"large"} color={"black"} />}
       user={{
-        _id: user.data.uid,
+        _id: currentUser.data.uid,
         avatar: "https://i.pravatar.cc/300",
       }}
     />

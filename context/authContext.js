@@ -40,13 +40,11 @@ function AuthContextProvider({ children }) {
           .doc(user.uid)
           .get();
 
-        const { claims } = await user.getIdTokenResult();
-        console.log("is patroller: ", claims?.patroller);
-        console.log(JSON.stringify(userData.data(), null, 2));
+        const token = await user.getIdToken();
         setUser({
           isAuthenticated: true,
           data: userData.data(),
-          token: user.accessToken,
+          token,
         });
       }
       setLoading(false);

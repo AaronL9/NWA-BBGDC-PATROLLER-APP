@@ -24,6 +24,7 @@ import Settings from "../screens/Settings.jsx";
 import LocationReport from "../screens/LocationReport.jsx";
 import ChatTab from "../screens/ChatTab.jsx";
 import PatrollerMap from "../screens/PatrollerMap.jsx";
+import MapWithAnimatedMarker from "../screens/MapWithAnimatedMarker.jsx";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -63,7 +64,6 @@ async function registerForPushNotificationsAsync() {
     token = await Notifications.getExpoPushTokenAsync({
       projectId: Constants.expoConfig.extra.eas.projectId,
     });
-    console.log(token);
   } else {
     alert("Must use physical device for Push Notifications");
   }
@@ -232,8 +232,8 @@ export default function Home() {
 
       locationSubscriber = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Lowest,
-          distanceInterval: 50,
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 5,
         },
         (newLocation) => {
           const newCoords = newLocation.coords;

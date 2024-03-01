@@ -40,7 +40,7 @@ export default function Login() {
         .where("phoneNumber", "==", formattedPhoneNumber)
         .limit(1)
         .get();
-      if (userQuerySnapshot.empty) throw new Error("Unauthorize phone number");
+      if (userQuerySnapshot.empty) throw new Error("Access Denied");
 
       const confirmation = await auth().signInWithPhoneNumber(
         formattedPhoneNumber
@@ -85,7 +85,7 @@ export default function Login() {
                 />
               </View>
               {error && <ErrorLoginMessage message={error} />}
-              <AuthButton title={"Send code"} onPress={sendCodeHandler} />
+              <AuthButton title={"Login"} onPress={sendCodeHandler} />
             </>
           ) : (
             <>

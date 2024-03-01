@@ -1,17 +1,27 @@
 // PatrollerMabp.js
-import React, { useState, useContext, useEffect, useLayoutEffect } from "react";
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+import React, { useState, useContext, useEffect, useRef } from "react";
+import MapView, {
+  Marker,
+  Polyline,
+  PROVIDER_GOOGLE,
+  MarkerAnimated,
+  AnimatedRegion,
+} from "react-native-maps";
 import polyline from "@mapbox/polyline";
 import { AuthContext } from "../context/authContext";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 
 const PatrollerMap = ({ navigation, route }) => {
+  const markerRef = useRef(null);
   const { patrollerLocation } = useContext(AuthContext);
   const { coords } = route.params;
 
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [initialPatrollerCoordinates] = useState(
+    new AnimatedRegion(patrollerLocation)
+  );
 
   const renderRoute = async () => {
     try {
@@ -53,7 +63,7 @@ const PatrollerMap = ({ navigation, route }) => {
     }
   }, [patrollerLocation, refreshing]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={handleRefresh}>
@@ -62,6 +72,23 @@ const PatrollerMap = ({ navigation, route }) => {
       ),
     });
   }, [navigation]);
+
+  const handleMarkerAnimation = (nextCoordinate, duration) => {
+    const { latitude, longitude } = markerRef.current.props.coordinate;
+    const oldCoordinate = { latitude, longitude };
+
+    if (oldCoordinate !== nextCoordinate) {
+      if (Platform.OS === "android") {
+        markerRef.current.animateMarkerToCoordinate(nextCoordinate, duration);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (markerRef.current) {
+      handleMarkerAnimation(patrollerLocation, 500);
+    }
+  }, [patrollerLocation]);
 
   return (
     <MapView
@@ -79,7 +106,11 @@ const PatrollerMap = ({ navigation, route }) => {
     >
       {patrollerLocation && (
         <>
-          <Marker coordinate={patrollerLocation} title="Patroller" />
+          <MarkerAnimated
+            ref={markerRef}
+            coordinate={initialPatrollerCoordinates}
+            title="Patroller"
+          />
           {routeCoordinates.length > 0 && (
             <Polyline
               coordinates={routeCoordinates}

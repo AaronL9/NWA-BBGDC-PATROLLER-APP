@@ -4,7 +4,6 @@ import { Colors } from "../../constants/colors";
 
 export default function ChatCard({ name, roomId, adminId }) {
   const navigation = useNavigation();
-  console.log(roomId);
   return (
     <View style={styles.cardContainer}>
       <Pressable

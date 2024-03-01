@@ -40,7 +40,7 @@ yarn-error.*
 .vscode/*
 !.vscode/extensions.json
 
-# Project Files
+# credential
 google-services.json
 
 #debugger
@@ -48,3 +48,4 @@ google-services.json
 
 # others
 legacy_code.js
+MapWithAnimatedMarker.jsx
