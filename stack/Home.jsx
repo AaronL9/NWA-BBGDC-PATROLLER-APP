@@ -233,8 +233,8 @@ export default function Home() {
 
       locationSubscriber = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Lowest,
-          distanceInterval: 10,
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 5,
         },
         (newLocation) => {
           const newCoords = newLocation.coords;
