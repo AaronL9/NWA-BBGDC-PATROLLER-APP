@@ -5,7 +5,7 @@ import { Colors } from "../constants/colors";
 const Header = ({ customStyle, imageStyle }) => {
   return (
     <View style={[styles.headerContainer, customStyle]}>
-      <Image style={imageStyle} source={require("../assets/logo.png")} />
+      <Image style={imageStyle} source={require("../assets/icon.png")} />
       <View>
         <Text style={styles.headerText}>Neighborhood Watch</Text>
         <Text style={[styles.headerText, styles.bottomText]}>
@@ -35,6 +35,6 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     borderLeftWidth: 2,
     paddingLeft: 12,
-    borderColor: Colors.accent
+    borderColor: Colors.accent,
   },
 });

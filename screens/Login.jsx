@@ -19,6 +19,7 @@ import {
   formatPhoneNumber,
 } from "../util/stringFormatter";
 import SignInField from "../components/auth/SignInField";
+import { checkPatrollerExistence } from "../util/accessControl";
 
 export default function Login() {
   const { setAuthenticating } = useContext(AuthContext);
@@ -35,12 +36,7 @@ export default function Login() {
     try {
       setAuthenticating(true);
 
-      const userQuerySnapshot = await firestore()
-        .collection("patrollers")
-        .where("phoneNumber", "==", formattedPhoneNumber)
-        .limit(1)
-        .get();
-      if (userQuerySnapshot.empty) throw new Error("Access Denied");
+      await checkPatrollerExistence(formattedPhoneNumber);
 
       const confirmation = await auth().signInWithPhoneNumber(
         formattedPhoneNumber

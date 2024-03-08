@@ -24,7 +24,7 @@ import Settings from "../screens/Settings.jsx";
 import LocationReport from "../screens/LocationReport.jsx";
 import ChatTab from "../screens/ChatTab.jsx";
 import PatrollerMap from "../screens/PatrollerMap.jsx";
-import MapWithAnimatedMarker from "../screens/MapWithAnimatedMarker.jsx";
+import { truncateAndAddDots } from "../util/stringFormatter.js";
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -87,14 +87,15 @@ function CustomDrawerContent(props) {
       >
         <Image
           source={
-            user.data.avatarUrl
+            user?.data?.avatarUrl
               ? { uri: user.data.avatarUrl }
               : require("../assets/profile-circle.png")
           }
           style={{ width: 35, height: 35, borderRadius: 17.5 }}
         />
         <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
-          {!authenticating && `${user.data.firstName} ${user.data.lastName}`}
+          {!authenticating &&
+            truncateAndAddDots(`${user.data.firstName} ${user.data.lastName}`)}
         </Text>
         <View style={{ marginStart: "auto" }}>
           <Ionicons
@@ -161,7 +162,7 @@ function DrawerNavigator() {
 }
 
 export default function Home() {
-  const { user, setPatrollerLocation } = useContext(AuthContext);
+  const { user, setPatrollerLocation, logout } = useContext(AuthContext);
   const [location, setLocation] = useState(null);
 
   const isUserDataLoaded = !!user?.data && !!user?.data?.uid;
@@ -196,7 +197,7 @@ export default function Home() {
     const updatePatrollerLocation = async () => {
       if (!location) return;
       try {
-        firestore()
+        await firestore()
           .collection("patrollers")
           .doc(user.data.uid)
           .update({
@@ -205,9 +206,9 @@ export default function Home() {
               lng: location.longitude,
             },
           });
-        console.log("updating");
       } catch (error) {
-        console.log(error);
+        await logout();
+        console.log(error.code);
       }
     };
     updatePatrollerLocation();
@@ -232,8 +233,8 @@ export default function Home() {
 
       locationSubscriber = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.High,
-          distanceInterval: 5,
+          accuracy: Location.Accuracy.Lowest,
+          distanceInterval: 10,
         },
         (newLocation) => {
           const newCoords = newLocation.coords;

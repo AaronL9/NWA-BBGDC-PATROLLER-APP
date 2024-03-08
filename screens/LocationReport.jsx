@@ -46,7 +46,7 @@ export default function LocationReport() {
   return (
     <View style={styles.rootContainer}>
       <Text style={styles.bodyTitle}>Reported Location</Text>
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: 8, flex: 1 }}>
         {loading && <ActivityIndicator size="large" color="black" />}
         {liveLocation.map((data) => (
           <LocationCard
@@ -55,6 +55,15 @@ export default function LocationReport() {
             coords={data.coords}
           />
         ))}
+        {liveLocation.length === 0 && (
+          <View
+            style={{
+              alignSelf: "center",
+            }}
+          >
+            <Text>No current forwared location</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -65,6 +74,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingHorizontal: 8,
     gap: 32,
+    flex: 1,
   },
   bodyTitle: {
     fontSize: 20,
