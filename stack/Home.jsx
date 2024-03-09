@@ -216,14 +216,19 @@ export default function Home() {
   }, [location]);
 
   useEffect(() => {
-    let locationSubscriber;
+    let foregroundLocationSubscriber;
+    let backgroundLocationTask;
 
     const startLocationTracking = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      const { status: backgroundStats } =
+      const foregroundPermission =
+        await Location.requestForegroundPermissionsAsync();
+      const backgroundPermission =
         await Location.requestBackgroundPermissionsAsync();
-      console.log(backgroundStats);
-      if (status !== "granted") {
+
+      if (
+        foregroundPermission.status !== "granted" ||
+        backgroundPermission.status !== "granted"
+      ) {
         Alert.alert(
           "Permission Denied",
           "Please allow location to track your routes",
@@ -235,36 +240,52 @@ export default function Home() {
         return false;
       }
 
-      locationSubscriber = await Location.watchPositionAsync(
+      foregroundLocationSubscriber = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.Highest,
           timeInterval: 10000,
         },
         (newLocation) => {
-          const newCoords = newLocation.coords;
-          console.log(newCoords);
-          if (
-            !location ||
-            location.latitude !== newCoords.latitude ||
-            location.longitude !== newCoords.longitude
-          ) {
-            if (newCoords.accuracy > 75) {
-              setLocation(newCoords);
-              setPatrollerLocation({
-                latitude: newCoords.latitude,
-                longitude: newCoords.longitude,
-              });
-              console.log("the accuracy:", newCoords.accuracy);
-              console.log("Your location details as of : ", newCoords);
-            }
-          }
+          handleLocationUpdate(newLocation.coords);
+        }
+      );
+
+      // Start background location updates
+      const backgroundTaskName = "background-location-task";
+      backgroundLocationTask = await Location.startLocationUpdatesAsync(
+        backgroundTaskName,
+        {
+          accuracy: Location.Accuracy.Highest,
+          showsBackgroundLocationIndicator: true,
+          deferredUpdatesInterval: 10000, // 10 seconds
         }
       );
     };
 
+    const handleLocationUpdate = (newCoords) => {
+      if (
+        !location ||
+        location.latitude !== newCoords.latitude ||
+        location.longitude !== newCoords.longitude
+      ) {
+        if (newCoords.accuracy > 75) {
+          setLocation(newCoords);
+          setPatrollerLocation({
+            latitude: newCoords.latitude,
+            longitude: newCoords.longitude,
+          });
+          console.log("the accuracy:", newCoords.accuracy);
+          console.log("Your location details as of : ", newCoords);
+        }
+      }
+    };
+
     const cleanup = () => {
-      if (locationSubscriber) {
-        locationSubscriber.remove();
+      if (foregroundLocationSubscriber) {
+        foregroundLocationSubscriber.remove();
+      }
+      if (backgroundLocationTask) {
+        Location.stopLocationUpdatesAsync("background-location-task");
       }
     };
 
