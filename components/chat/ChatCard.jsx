@@ -1,21 +1,29 @@
 import { StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Colors } from "../../constants/colors";
+import { AuthContext } from "../../context/authContext";
+import { useContext } from "react";
 
-export default function ChatCard({ name, roomId, adminId }) {
+export default function ChatCard({ name, roomId, adminId, lastMessage }) {
+  const { user } = useContext(AuthContext);
   const navigation = useNavigation();
+
+  const you = user.data.uid === lastMessage.id ? "You: " : "";
+
+  const pressHandler = () => {
+    navigation.navigate("Chat", {
+      roomId,
+      chatTitle: name,
+      adminId,
+    });
+  };
+
   return (
     <View style={styles.cardContainer}>
       <Pressable
         android_ripple={{ color: "grey", foreground: true }}
         style={styles.pressContainer}
-        onPress={() =>
-          navigation.navigate("Chat", {
-            roomId,
-            chatTitle: name,
-            adminId,
-          })
-        }
+        onPress={pressHandler}
       >
         <Image
           style={styles.image}
@@ -23,6 +31,9 @@ export default function ChatCard({ name, roomId, adminId }) {
         />
         <View>
           <Text style={{ fontWeight: "bold", color: "white" }}>{name}</Text>
+          <Text
+            style={{ color: "white", fontWeight: 200 }}
+          >{`${you} ${lastMessage.message}`}</Text>
         </View>
       </Pressable>
     </View>

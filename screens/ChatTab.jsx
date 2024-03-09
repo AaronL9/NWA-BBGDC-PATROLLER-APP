@@ -20,6 +20,9 @@ export default function ChatList() {
         const data = querySnapshot.docs.map((doc) => ({
           docId: doc.id,
           admin: doc.data().admin,
+          lastMessage: doc.data()?.lastMessage ?? {
+            message: "You are now connected",
+          },
         }));
         setRooms(data);
         setLoading(false);
@@ -27,6 +30,8 @@ export default function ChatList() {
 
     return () => subscriber();
   }, []);
+
+  console.log(rooms);
 
   return (
     <View style={styles.rootContainer}>
@@ -40,6 +45,7 @@ export default function ChatList() {
           name={data.admin.displayName}
           adminId={data.admin.id}
           roomId={data.docId}
+          lastMessage={data?.lastMessage || false}
         />
       ))}
     </View>
