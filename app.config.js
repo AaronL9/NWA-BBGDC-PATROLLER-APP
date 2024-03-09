@@ -38,6 +38,12 @@ module.exports = {
         "expo-notifications",
         { sounds: ["./assets/alert_patroller_sound.wav"] },
       ],
+      [
+        "expo-location",
+        {
+          isAndroidBackgroundLocationEnabled: true,
+        },
+      ],
     ],
     extra: {
       eas: {

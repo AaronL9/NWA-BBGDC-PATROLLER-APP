@@ -1,4 +1,4 @@
-import { useContext, useEffect, useLayoutEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { View, Text, Image, Alert, Linking } from "react-native";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
@@ -162,8 +162,9 @@ function DrawerNavigator() {
 }
 
 export default function Home() {
-  const { user, setPatrollerLocation, logout } = useContext(AuthContext);
-  const [location, setLocation] = useState(null);
+  const { user, setPatrollerLocation, patrollerLocation, logout } =
+    useContext(AuthContext);
+  const [location, setLocation] = useState(patrollerLocation);
 
   const isUserDataLoaded = !!user?.data && !!user?.data?.uid;
 
@@ -214,11 +215,14 @@ export default function Home() {
     updatePatrollerLocation();
   }, [location]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     let locationSubscriber;
 
     const startLocationTracking = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status: backgroundStats } =
+        await Location.requestBackgroundPermissionsAsync();
+      console.log(backgroundStats);
       if (status !== "granted") {
         Alert.alert(
           "Permission Denied",
@@ -233,22 +237,26 @@ export default function Home() {
 
       locationSubscriber = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Balanced,
-          distanceInterval: 5,
+          accuracy: Location.Accuracy.Highest,
+          timeInterval: 10000,
         },
         (newLocation) => {
           const newCoords = newLocation.coords;
+          console.log(newCoords);
           if (
             !location ||
             location.latitude !== newCoords.latitude ||
             location.longitude !== newCoords.longitude
           ) {
-            setLocation(newCoords);
-            setPatrollerLocation({
-              latitude: newCoords.latitude,
-              longitude: newCoords.longitude,
-            });
-            console.log("My location: ", newCoords);
+            if (newCoords.accuracy > 75) {
+              setLocation(newCoords);
+              setPatrollerLocation({
+                latitude: newCoords.latitude,
+                longitude: newCoords.longitude,
+              });
+              console.log("the accuracy:", newCoords.accuracy);
+              console.log("Your location details as of : ", newCoords);
+            }
           }
         }
       );
