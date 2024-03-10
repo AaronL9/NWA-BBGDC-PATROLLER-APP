@@ -40,9 +40,9 @@ const requestPermissions = async () => {
       await Location.requestBackgroundPermissionsAsync();
     if (backgroundStatus === "granted") {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.Highest,
         distanceInterval: 1,
-        timeInterval: 1000,
+        timeInterval: 5000,
       });
     }
   }
@@ -58,16 +58,19 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     try {
       const location = locations[0].coords;
       await AsyncStorage.setItem("device_location", JSON.stringify(location));
-      const uid = await AsyncStorage.getItem("uid");
-      firestore()
-        .collection("patrollers")
-        .doc(uid)
-        .update({
-          patrollerLocation: {
-            lat: location.latitude,
-            lng: location.longitude,
-          },
-        });
+      if (location.accuracy < 4) {
+        console.log("Background: ", location);
+        const uid = await AsyncStorage.getItem("uid");
+        firestore()
+          .collection("patrollers")
+          .doc(uid)
+          .update({
+            patrollerLocation: {
+              lat: location.latitude,
+              lng: location.longitude,
+            },
+          });
+      }
     } catch (e) {
       console.log(e.message);
     }
@@ -210,7 +213,7 @@ function DrawerNavigator() {
 }
 
 export default function Home() {
-  const { user } = useContext(AuthContext);
+  const { user, setPatrollerLocation } = useContext(AuthContext);
 
   const isUserDataLoaded = !!user?.data && !!user?.data?.uid;
 
@@ -239,6 +242,58 @@ export default function Home() {
       subscription2.remove();
     };
   }, []);
+
+  useEffect(() => {
+    let locationSubscriber;
+
+    const startLocationTracking = async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Please allow location to track your routes",
+          [
+            { text: "cancel" },
+            { text: "Go to settings", onPress: () => Linking.openSettings() },
+          ]
+        );
+        return false;
+      }
+
+      locationSubscriber = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Highest,
+          distanceInterval: 1,
+          timeInterval: 5000,
+        },
+        (newLocation) => {
+          const newCoords = newLocation.coords;
+          if (newCoords.accuracy < 4) {
+            setPatrollerLocation({
+              latitude: newCoords.latitude,
+              longitude: newCoords.longitude,
+            });
+            console.log("foreground: ", newCoords);
+          }
+        }
+      );
+    };
+
+    const cleanup = () => {
+      if (locationSubscriber) {
+        locationSubscriber.remove();
+      }
+    };
+
+    if (isUserDataLoaded) {
+      startLocationTracking();
+
+      return cleanup; // Cleanup when the component unmounts or dependencies change
+    }
+
+    // Cleanup when the user data is not loaded
+    cleanup();
+  }, [isUserDataLoaded, user]);
 
   useEffect(() => {
     requestPermissions();
