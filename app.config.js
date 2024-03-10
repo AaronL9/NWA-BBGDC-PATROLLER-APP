@@ -2,13 +2,13 @@ module.exports = {
   expo: {
     name: "Neigborhood Watch - patroller",
     slug: "patroller-app",
-    version: "1.0.4",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     splash: {
       image: "./assets/splash-icon.png",
-      resizeMode: "contain",
+      resizeMode: "native",
       backgroundColor: "#ffffff",
     },
     assetBundlePatterns: ["**/*"],
