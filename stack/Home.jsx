@@ -220,9 +220,6 @@ export default function Home() {
 
     const startLocationTracking = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      const { status: backgroundStats } =
-        await Location.requestBackgroundPermissionsAsync();
-      console.log(backgroundStats);
       if (status !== "granted") {
         Alert.alert(
           "Permission Denied",
@@ -237,8 +234,8 @@ export default function Home() {
 
       locationSubscriber = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Highest,
-          timeInterval: 10000,
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 1000,
         },
         (newLocation) => {
           const newCoords = newLocation.coords;
