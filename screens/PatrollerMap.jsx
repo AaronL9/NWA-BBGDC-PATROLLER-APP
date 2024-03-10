@@ -11,10 +11,11 @@ import polyline from "@mapbox/polyline";
 import { AuthContext } from "../context/authContext";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
+import * as Location from "expo-location";
 
 const PatrollerMap = ({ navigation, route }) => {
   const markerRef = useRef(null);
-  const { patrollerLocation } = useContext(AuthContext);
+  const { patrollerLocation, setPatrollerLocation } = useContext(AuthContext);
   const { coords } = route.params;
 
   const [routeCoordinates, setRouteCoordinates] = useState([]);
@@ -89,6 +90,33 @@ const PatrollerMap = ({ navigation, route }) => {
       handleMarkerAnimation(patrollerLocation, 500);
     }
   }, [patrollerLocation]);
+
+  useEffect(() => {
+    const startLocation = async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== "granted") {
+        return;
+      }
+
+      const locationSubscriber = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.Balanced, timeInterval: 5000 },
+        (newLocation) => {
+          const newCoords = newLocation.coords;
+          setPatrollerLocation({
+            latitude: newCoords.latitude,
+            longitude: newCoords.longitude,
+          });
+          console.log("location from patroller map", newLocation.coords);
+        }
+      );
+
+      return () => {
+        locationSubscriber.remove();
+      };
+    };
+
+    startLocation();
+  }, []);
 
   return (
     <MapView

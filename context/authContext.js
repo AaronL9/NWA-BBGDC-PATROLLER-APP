@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const AuthContext = createContext({
   user: {},
@@ -37,6 +38,10 @@ function AuthContextProvider({ children }) {
     const unsubscribe = auth().onAuthStateChanged(async (user) => {
       if (user) {
         try {
+          const location = await AsyncStorage.getItem("device_location");
+          if (location) setPatrollerLocation(location);
+
+          await AsyncStorage.setItem("uid", user.uid);
           const result = await user.getIdTokenResult();
 
           if (!result.claims?.patroller) {

@@ -2,12 +2,16 @@ import { useContext, useEffect, useState } from "react";
 import { View, Text, Image, Alert, Linking } from "react-native";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
+
+import firestore from "@react-native-firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import Constants from "expo-constants";
-import firestore from "@react-native-firebase/firestore";
+import * as TaskManager from "expo-task-manager";
 
 import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -25,6 +29,50 @@ import LocationReport from "../screens/LocationReport.jsx";
 import ChatTab from "../screens/ChatTab.jsx";
 import PatrollerMap from "../screens/PatrollerMap.jsx";
 import { truncateAndAddDots } from "../util/stringFormatter.js";
+
+const LOCATION_TASK_NAME = "background-location-task";
+
+const requestPermissions = async () => {
+  const { status: foregroundStatus } =
+    await Location.requestForegroundPermissionsAsync();
+  if (foregroundStatus === "granted") {
+    const { status: backgroundStatus } =
+      await Location.requestBackgroundPermissionsAsync();
+    if (backgroundStatus === "granted") {
+      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: 1,
+        timeInterval: 1000,
+      });
+    }
+  }
+};
+
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
+  if (error) {
+    // Error occurred - check `error.message` for more details.
+    return;
+  }
+  if (data) {
+    const { locations } = data;
+    try {
+      const location = locations[0].coords;
+      await AsyncStorage.setItem("device_location", JSON.stringify(location));
+      const uid = await AsyncStorage.getItem("uid");
+      firestore()
+        .collection("patrollers")
+        .doc(uid)
+        .update({
+          patrollerLocation: {
+            lat: location.latitude,
+            lng: location.longitude,
+          },
+        });
+    } catch (e) {
+      console.log(e.message);
+    }
+  }
+});
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -162,9 +210,7 @@ function DrawerNavigator() {
 }
 
 export default function Home() {
-  const { user, setPatrollerLocation, patrollerLocation, logout } =
-    useContext(AuthContext);
-  const [location, setLocation] = useState(patrollerLocation);
+  const { user } = useContext(AuthContext);
 
   const isUserDataLoaded = !!user?.data && !!user?.data?.uid;
 
@@ -195,109 +241,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const updatePatrollerLocation = async () => {
-      if (!location) return;
-      try {
-        await firestore()
-          .collection("patrollers")
-          .doc(user.data.uid)
-          .update({
-            patrollerLocation: {
-              lat: location.latitude,
-              lng: location.longitude,
-            },
-          });
-      } catch (error) {
-        await logout();
-        console.log(error.code);
-      }
-    };
-    updatePatrollerLocation();
-  }, [location]);
-
-  useEffect(() => {
-    let foregroundLocationSubscriber;
-    let backgroundLocationTask;
-
-    const startLocationTracking = async () => {
-      const foregroundPermission =
-        await Location.requestForegroundPermissionsAsync();
-      const backgroundPermission =
-        await Location.requestBackgroundPermissionsAsync();
-
-      if (
-        foregroundPermission.status !== "granted" ||
-        backgroundPermission.status !== "granted"
-      ) {
-        Alert.alert(
-          "Permission Denied",
-          "Please allow location to track your routes",
-          [
-            { text: "cancel" },
-            { text: "Go to settings", onPress: () => Linking.openSettings() },
-          ]
-        );
-        return false;
-      }
-
-      foregroundLocationSubscriber = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.Highest,
-          timeInterval: 10000,
-        },
-        (newLocation) => {
-          handleLocationUpdate(newLocation.coords);
-        }
-      );
-
-      // Start background location updates
-      const backgroundTaskName = "background-location-task";
-      backgroundLocationTask = await Location.startLocationUpdatesAsync(
-        backgroundTaskName,
-        {
-          accuracy: Location.Accuracy.Highest,
-          showsBackgroundLocationIndicator: true,
-          deferredUpdatesInterval: 10000, // 10 seconds
-        }
-      );
-    };
-
-    const handleLocationUpdate = (newCoords) => {
-      if (
-        !location ||
-        location.latitude !== newCoords.latitude ||
-        location.longitude !== newCoords.longitude
-      ) {
-        if (newCoords.accuracy > 75) {
-          setLocation(newCoords);
-          setPatrollerLocation({
-            latitude: newCoords.latitude,
-            longitude: newCoords.longitude,
-          });
-          console.log("the accuracy:", newCoords.accuracy);
-          console.log("Your location details as of : ", newCoords);
-        }
-      }
-    };
-
-    const cleanup = () => {
-      if (foregroundLocationSubscriber) {
-        foregroundLocationSubscriber.remove();
-      }
-      if (backgroundLocationTask) {
-        Location.stopLocationUpdatesAsync("background-location-task");
-      }
-    };
-
-    if (isUserDataLoaded) {
-      startLocationTracking();
-
-      return cleanup; // Cleanup when the component unmounts or dependencies change
-    }
-
-    // Cleanup when the user data is not loaded
-    cleanup();
-  }, [isUserDataLoaded, user]);
+    requestPermissions();
+  }, []);
 
   return (
     <Stack.Navigator
