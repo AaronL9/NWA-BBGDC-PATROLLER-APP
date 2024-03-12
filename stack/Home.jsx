@@ -323,7 +323,6 @@ export default function Home() {
 
   useEffect(() => {
     requestBackgroundPermissions();
-    console.log(AppState.currentState);
   }, []);
 
   return (

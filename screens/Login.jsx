@@ -1,11 +1,17 @@
-import { View, StyleSheet, StatusBar, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  StatusBar,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
 
 // firebase
 import auth from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 
 // components
 import AuthButton from "../components/auth/AuthButton";
@@ -13,21 +19,22 @@ import Header from "../components/Header";
 import ErrorLoginMessage from "../components/auth/ErrorLoginMessage";
 
 // utilities
-import { validatePhoneNumber } from "../util/formValidation";
 import {
   extractErrorMessage,
   formatPhoneNumber,
 } from "../util/stringFormatter";
 import SignInField from "../components/auth/SignInField";
 import { checkPatrollerExistence } from "../util/accessControl";
+import ResendCode from "../components/auth/ResendCode";
 
 export default function Login() {
-  const { setAuthenticating } = useContext(AuthContext);
+  const { setAuthenticating, authenticating } = useContext(AuthContext);
 
   const [phoneNumber, setPhoneNumber] = useState("");
   const [code, setCode] = useState("");
   const [confirm, setConfirm] = useState(null);
   const [error, setError] = useState(null);
+  const [showChangeNumber, setShowChangeNumber] = useState(null);
 
   const sendCodeHandler = async () => {
     setError(null);
@@ -42,6 +49,7 @@ export default function Login() {
         formattedPhoneNumber
       );
       setConfirm(confirmation);
+      setShowChangeNumber(false);
     } catch (error) {
       console.log("Error sending code: ", error);
       const errorMessage = error?.code || error?.message;
@@ -94,6 +102,30 @@ export default function Login() {
               </View>
               {error && <ErrorLoginMessage message={error} />}
               <AuthButton title={"Confirm"} onPress={confirmCode} />
+              {!authenticating && (
+                <View
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    flexDirection: "row",
+                    justifyContent: showChangeNumber
+                      ? "space-between"
+                      : "flex-end",
+                  }}
+                >
+                  {showChangeNumber && (
+                    <TouchableOpacity onPress={() => setConfirm(null)}>
+                      <Text style={{ color: "white", fontSize: 12 }}>
+                        Change Phone Number?
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  <ResendCode
+                    sendCodeHanlder={sendCodeHandler}
+                    setShowOption={setShowChangeNumber}
+                  />
+                </View>
+              )}
             </>
           )}
         </View>

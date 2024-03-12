@@ -46,29 +46,17 @@ export default function Chat({ route }) {
         user,
       });
 
-    try {
-      const response = await fetch(
-        `https://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/push/notify-admin`,
-        {
-          method: "POST",
-          body: JSON.stringify({ adminId }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: currentUser.token,
-          },
-        }
-      );
-
-      const json = await response.json();
-
-      if (!response.ok) {
-        console.log(json);
+    fetch(
+      `https://${process.env.EXPO_PUBLIC_API_ENDPOINT}/api/push/notify-admin`,
+      {
+        method: "POST",
+        body: JSON.stringify({ adminId }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: currentUser.token,
+        },
       }
-
-      console.log(json);
-    } catch (error) {
-      console.log(error);
-    }
+    );
   }, []);
 
   return (

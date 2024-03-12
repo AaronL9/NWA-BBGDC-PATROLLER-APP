@@ -31,8 +31,6 @@ export default function ChatList() {
     return () => subscriber();
   }, []);
 
-  console.log(rooms);
-
   return (
     <View style={styles.rootContainer}>
       <View>
