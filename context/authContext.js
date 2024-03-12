@@ -38,10 +38,8 @@ function AuthContextProvider({ children }) {
     const unsubscribe = auth().onAuthStateChanged(async (user) => {
       if (user) {
         try {
-          const location = await AsyncStorage.getItem("device_location");
-          if (location) setPatrollerLocation(location);
-
           await AsyncStorage.setItem("uid", user.uid);
+
           const result = await user.getIdTokenResult();
 
           if (!result.claims?.patroller) {

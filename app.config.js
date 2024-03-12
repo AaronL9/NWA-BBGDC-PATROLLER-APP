@@ -2,13 +2,13 @@ module.exports = {
   expo: {
     name: "Neigborhood Watch - patroller",
     slug: "patroller-app",
-    version: "1.0.4",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     splash: {
-      image: "./assets/splash-icon.png",
-      resizeMode: "native",
+      image: "./assets/splash.png",
+      resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
     assetBundlePatterns: ["**/*"],
@@ -34,10 +34,7 @@ module.exports = {
     plugins: [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      [
-        "expo-notifications",
-        { sounds: ["./assets/alert_patroller_sound.wav"] },
-      ],
+      ["expo-notifications"],
       [
         "expo-location",
         {

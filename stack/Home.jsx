@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { View, Text, Image, Alert, Linking } from "react-native";
+import { View, Text, Image, Alert, Linking, AppState } from "react-native";
 import { AuthContext } from "../context/authContext";
 import { Colors } from "../constants/colors";
 
@@ -7,11 +7,13 @@ import firestore from "@react-native-firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { Ionicons } from "@expo/vector-icons";
-import Constants from "expo-constants";
+import firestore from "@react-native-firebase/firestore";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import * as TaskManager from "expo-task-manager";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -32,47 +34,44 @@ import { truncateAndAddDots } from "../util/stringFormatter.js";
 
 const LOCATION_TASK_NAME = "background-location-task";
 
-const requestPermissions = async () => {
-  const { status: foregroundStatus } =
-    await Location.requestForegroundPermissionsAsync();
-  if (foregroundStatus === "granted") {
-    const { status: backgroundStatus } =
-      await Location.requestBackgroundPermissionsAsync();
-    if (backgroundStatus === "granted") {
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.Highest,
-        distanceInterval: 1,
-        timeInterval: 5000,
-      });
-    }
+const requestBackgroundPermissions = async () => {
+  const { status: backgroundStatus } =
+    await Location.requestBackgroundPermissionsAsync();
+  if (backgroundStatus === "granted") {
+    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: Location.Accuracy.BestForNavigation,
+      showsBackgroundLocationIndicator: true,
+      timeInterval: 5000,
+      distanceInterval: 3,
+      foregroundService: {
+        notificationTitle: "Using your location",
+        notificationBody: "to turn off, change the permission in your settings",
+      },
+    });
   }
 };
 
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   if (error) {
-    // Error occurred - check `error.message` for more details.
+    alert(error.message);
     return;
   }
   if (data) {
     const { locations } = data;
-    try {
-      const location = locations[0].coords;
-      await AsyncStorage.setItem("device_location", JSON.stringify(location));
-      if (location.accuracy < 4) {
-        console.log("Background: ", location);
-        const uid = await AsyncStorage.getItem("uid");
-        firestore()
-          .collection("patrollers")
-          .doc(uid)
-          .update({
-            patrollerLocation: {
-              lat: location.latitude,
-              lng: location.longitude,
-            },
-          });
-      }
-    } catch (e) {
-      console.log(e.message);
+    const location = locations[0].coords;
+
+    const uid = await AsyncStorage.getItem("uid");
+    if (AppState.currentState === "background" && uid) {
+      await firestore()
+        .collection("patrollers")
+        .doc(uid)
+        .update({
+          patrollerLocation: {
+            lat: location.latitude,
+            lng: location.longitude,
+          },
+        });
+      console.log("Background: ", locations[0].coords);
     }
   }
 });
@@ -247,7 +246,7 @@ export default function Home() {
     let locationSubscriber;
 
     const startLocationTracking = async () => {
-      const { status } = await Location.getForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permission Denied",
@@ -262,18 +261,26 @@ export default function Home() {
 
       locationSubscriber = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Highest,
-          distanceInterval: 1,
+          accuracy: Location.Accuracy.BestForNavigation,
           timeInterval: 5000,
+          distanceInterval: 3,
         },
         (newLocation) => {
           const newCoords = newLocation.coords;
-          if (newCoords.accuracy < 4) {
-            setPatrollerLocation({
-              latitude: newCoords.latitude,
-              longitude: newCoords.longitude,
-            });
-            console.log("foreground: ", newCoords);
+          if (
+            !location ||
+            location.latitude !== newCoords.latitude ||
+            location.longitude !== newCoords.longitude
+          ) {
+            if (!patrollerLocation) setPatrollerLocation(newCoords);
+            if (newCoords.accuracy < 10 && AppState.currentState === "active") {
+              setLocation(newCoords);
+              setPatrollerLocation({
+                latitude: newCoords.latitude,
+                longitude: newCoords.longitude,
+              });
+              console.log("Foreground: ", newCoords);
+            }
           }
         }
       );
@@ -296,7 +303,8 @@ export default function Home() {
   }, [isUserDataLoaded, user]);
 
   useEffect(() => {
-    requestPermissions();
+    requestBackgroundPermissions();
+    console.log(AppState.currentState);
   }, []);
 
   return (
