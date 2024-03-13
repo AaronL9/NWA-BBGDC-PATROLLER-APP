@@ -67,7 +67,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
             lng: location.longitude,
           },
         });
-      console.log("Background: ", locations[0].coords);
     }
   }
 });
@@ -224,14 +223,12 @@ export default function Home() {
         .set({ token }, { merge: true });
     });
 
-    const subscription1 = Notifications.addNotificationReceivedListener(() => {
-      console.log("NOTIFICATION RECEIVED HANDLED");
-    });
+    const subscription1 = Notifications.addNotificationReceivedListener(
+      () => {}
+    );
 
     const subscription2 = Notifications.addNotificationResponseReceivedListener(
-      () => {
-        console.log("NOTIFICATION RESPONSE HANLDED");
-      }
+      () => {}
     );
 
     return () => {
@@ -298,7 +295,6 @@ export default function Home() {
                 latitude: newCoords.latitude,
                 longitude: newCoords.longitude,
               });
-              console.log("Foreground: ", newCoords);
             }
           }
         }
