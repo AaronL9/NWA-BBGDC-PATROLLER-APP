@@ -342,6 +342,18 @@ export default function Home() {
           animation: "fade_from_bottom",
           headerTitle: route.params?.chatTitle,
           headerTitleStyle: { fontSize: 16 },
+          headerBackVisible: true,
+          headerLeft: ({}) => (
+            <Image
+              style={{
+                width: 35,
+                height: 35,
+                borderRadius: 17.5,
+                marginRight: 12,
+              }}
+              source={{ uri: route.params.avatarURL }}
+            />
+          ),
         })}
       />
       <Stack.Screen

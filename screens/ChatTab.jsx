@@ -23,6 +23,7 @@ export default function ChatList() {
           lastMessage: doc.data()?.lastMessage ?? {
             message: "You are now connected",
           },
+          avatarURL: doc.data().adminAvatarURL,
         }));
         setRooms(data);
         setLoading(false);
@@ -44,6 +45,7 @@ export default function ChatList() {
           adminId={data.admin.id}
           roomId={data.docId}
           lastMessage={data?.lastMessage || false}
+          avatarURL={data?.avatarURL ?? false}
         />
       ))}
     </View>

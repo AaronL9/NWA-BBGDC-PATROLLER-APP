@@ -4,7 +4,13 @@ import { Colors } from "../../constants/colors";
 import { AuthContext } from "../../context/authContext";
 import { useContext } from "react";
 
-export default function ChatCard({ name, roomId, adminId, lastMessage }) {
+export default function ChatCard({
+  name,
+  roomId,
+  adminId,
+  lastMessage,
+  avatarURL,
+}) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
 
@@ -15,6 +21,7 @@ export default function ChatCard({ name, roomId, adminId, lastMessage }) {
       roomId,
       chatTitle: name,
       adminId,
+      avatarURL,
     });
   };
 
@@ -27,12 +34,16 @@ export default function ChatCard({ name, roomId, adminId, lastMessage }) {
       >
         <Image
           style={styles.image}
-          source={require("../../assets/profile-circle.png")}
+          source={
+            avatarURL
+              ? { uri: avatarURL }
+              : require("../../assets/profile-circle.png")
+          }
         />
         <View>
-          <Text style={{ fontWeight: "bold", color: "white" }}>{name}</Text>
+          <Text style={{ fontWeight: "bold", color: "black" }}>{name}</Text>
           <Text
-            style={{ color: "white", fontWeight: 200 }}
+            style={{ color: "black", fontWeight: 200 }}
           >{`${you} ${lastMessage.message}`}</Text>
         </View>
       </Pressable>
@@ -42,8 +53,17 @@ export default function ChatCard({ name, roomId, adminId, lastMessage }) {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: Colors.bgPrimary200,
+    backgroundColor: "white",
     borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+
+    elevation: 2,
   },
   pressContainer: {
     flexDirection: "row",
@@ -51,11 +71,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 8,
     borderRadius: 8,
-    gap: 4,
+    gap: 8,
   },
   image: {
     width: 50,
     height: 50,
+    borderRadius: 25,
   },
   lastChat: {
     color: "#c3cfc8",

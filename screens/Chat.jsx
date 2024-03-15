@@ -6,8 +6,12 @@ import firestore from "@react-native-firebase/firestore";
 
 export default function Chat({ route }) {
   const { user: currentUser } = useContext(AuthContext);
-  const { roomId, adminId } = route.params;
+  const { roomId, adminId, avatarURL } = route.params;
   const [messages, setMessages] = useState([]);
+
+  const url =
+    avatarURL ??
+    "https://t3.ftcdn.net/jpg/05/16/27/58/360_F_516275801_f3Fsp17x6HQK0xQgDQEELoTuERO4SsWV.jpg";
 
   useEffect(() => {
     const subscriber = firestore()
@@ -21,6 +25,10 @@ export default function Chat({ route }) {
           ...doc.data(),
           _id: doc.id,
           createdAt: doc.data().createdAt.toDate(),
+          user: {
+            ...doc.data().user,
+            avatar: url,
+          },
         }));
         setMessages(currentMessages);
       });
@@ -66,7 +74,6 @@ export default function Chat({ route }) {
       renderLoading={() => <ActivityIndicator size={"large"} color={"black"} />}
       user={{
         _id: currentUser.data.uid,
-        avatar: "https://i.pravatar.cc/300",
       }}
     />
   );
