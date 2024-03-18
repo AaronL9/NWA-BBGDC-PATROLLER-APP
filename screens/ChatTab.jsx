@@ -21,8 +21,11 @@ export default function ChatList() {
           docId: doc.id,
           admin: doc.data().admin,
           lastMessage: doc.data()?.lastMessage ?? {
-            message: "You are now connected",
+            message: false,
           },
+          avatarURL: doc.data()?.adminAvatarURL ?? false,
+          patrollerSeen: doc.data()?.patrollerSeen ?? false,
+          date: doc.data().updatedAt,
         }));
         setRooms(data);
         setLoading(false);
@@ -44,6 +47,9 @@ export default function ChatList() {
           adminId={data.admin.id}
           roomId={data.docId}
           lastMessage={data?.lastMessage || false}
+          avatarURL={data.avatarURL}
+          patrollerSeen={data.patrollerSeen}
+          date={data.date}
         />
       ))}
     </View>

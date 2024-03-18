@@ -26,6 +26,7 @@ import AvatarBtn from "../components/settings/AvatarBtn";
 import { AuthContext } from "../context/authContext";
 import ProfileInfoEditor from "../components/settings/ProfileInfoEditor";
 import { trimObjectStrings } from "../util/stringFormatter";
+import LocationSettings from "../components/settings/LocationSettings";
 
 const { SlideInMenu } = renderers;
 
@@ -34,7 +35,7 @@ const BottomMenu = () => {
 
   const verifyCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    console.log(status);
+
     if (status !== "granted") {
       Alert.alert(
         "Permission Denied",
@@ -105,7 +106,6 @@ const BottomMenu = () => {
         onUploadProfilePicture(uri);
       }
     } catch (error) {
-      console.log(permission);
       console.log("Error while selecting file: ", error);
     }
   };
@@ -128,6 +128,17 @@ const BottomMenu = () => {
         .collection("patrollers")
         .doc(user.data.uid)
         .update({ avatarUrl: downloadURL });
+
+      const rooms = await firestore()
+        .collection("rooms")
+        .where("patroller.id", "==", user.data.uid)
+        .get();
+
+      rooms.forEach((doc) => {
+        firestore().collection("rooms").doc(doc.id).update({
+          patrollerAvatarURL: downloadURL,
+        });
+      });
     } catch (error) {
       console.error("Error uploading file:", error);
     }
@@ -287,6 +298,8 @@ export default function Settings() {
             isEditing={isEditing}
           />
         </View>
+        <View style={styles.divider}></View>
+        <LocationSettings />
       </ScrollView>
     </MenuProvider>
   );
@@ -332,4 +345,13 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   actionIconContainer: { alignSelf: "flex-end", flexDirection: "row", gap: 12 },
+  divider: {
+    width: "80%",
+    borderWidth: 0.3,
+    alignSelf: "center",
+    marginTop: 44,
+    marginBottom: 24,
+    opacity: 0.5,
+    borderColor: Colors.bgPrimaary400,
+  },
 });

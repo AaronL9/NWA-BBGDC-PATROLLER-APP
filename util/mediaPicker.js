@@ -3,7 +3,7 @@ import * as ImagePicker from "expo-image-picker";
 
 const verifyCameraPermission = async () => {
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
-  console.log(status);
+
   if (status !== "granted") {
     Alert.alert(
       "Permission Denied",

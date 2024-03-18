@@ -71,7 +71,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
             lng: location.longitude,
           },
         });
-      console.log("Background: ", locations[0].coords);
     }
   }
 });
@@ -226,14 +225,12 @@ export default function Home() {
         .set({ token }, { merge: true });
     });
 
-    const subscription1 = Notifications.addNotificationReceivedListener(() => {
-      console.log("NOTIFICATION RECEIVED HANDLED");
-    });
+    const subscription1 = Notifications.addNotificationReceivedListener(
+      () => {}
+    );
 
     const subscription2 = Notifications.addNotificationResponseReceivedListener(
-      () => {
-        console.log("NOTIFICATION RESPONSE HANLDED");
-      }
+      () => {}
     );
 
     return () => {
@@ -279,7 +276,6 @@ export default function Home() {
                 latitude: newCoords.latitude,
                 longitude: newCoords.longitude,
               });
-              console.log("Foreground: ", newCoords);
             }
           }
         }
@@ -304,7 +300,6 @@ export default function Home() {
 
   useEffect(() => {
     requestBackgroundPermissions();
-    console.log(AppState.currentState);
   }, []);
 
   return (
@@ -328,6 +323,22 @@ export default function Home() {
           animation: "fade_from_bottom",
           headerTitle: route.params?.chatTitle,
           headerTitleStyle: { fontSize: 16 },
+          headerBackVisible: true,
+          headerLeft: ({}) => (
+            <Image
+              style={{
+                width: 35,
+                height: 35,
+                borderRadius: 17.5,
+                marginRight: 12,
+              }}
+              source={{
+                uri:
+                  route.params?.avatarURL ||
+                  "https://t3.ftcdn.net/jpg/05/16/27/58/360_F_516275801_f3Fsp17x6HQK0xQgDQEELoTuERO4SsWV.jpg",
+              }}
+            />
+          ),
         })}
       />
       <Stack.Screen
