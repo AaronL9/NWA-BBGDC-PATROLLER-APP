@@ -6,9 +6,7 @@ export function limitStringLength(inputString, maxLength) {
   }
 }
 
-export function truncateAndAddDots(inputString) {
-  const maxLength = 21;
-
+export function truncateAndAddDots(inputString, maxLength = 21) {
   if (inputString.length > maxLength) {
     const truncatedString = inputString.slice(0, maxLength - 3);
     return truncatedString + "...";

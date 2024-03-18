@@ -351,7 +351,11 @@ export default function Home() {
                 borderRadius: 17.5,
                 marginRight: 12,
               }}
-              source={{ uri: route.params.avatarURL }}
+              source={{
+                uri:
+                  route.params?.avatarURL ||
+                  "https://t3.ftcdn.net/jpg/05/16/27/58/360_F_516275801_f3Fsp17x6HQK0xQgDQEELoTuERO4SsWV.jpg",
+              }}
             />
           ),
         })}

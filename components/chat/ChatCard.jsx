@@ -3,6 +3,8 @@ import { useNavigation } from "@react-navigation/native";
 import { Colors } from "../../constants/colors";
 import { AuthContext } from "../../context/authContext";
 import { useContext } from "react";
+import { formatFirebaseDate } from "../../util/dateFormatter";
+import { truncateAndAddDots } from "../../util/stringFormatter";
 
 export default function ChatCard({
   name,
@@ -10,6 +12,8 @@ export default function ChatCard({
   adminId,
   lastMessage,
   avatarURL,
+  patrollerSeen,
+  date,
 }) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
@@ -25,6 +29,9 @@ export default function ChatCard({
     });
   };
 
+  const displayDate = !!lastMessage.message ? formatFirebaseDate(date) : "";
+  const messagePlaceholder = lastMessage.message || "You are now connected";
+
   return (
     <View style={styles.cardContainer}>
       <Pressable
@@ -34,17 +41,23 @@ export default function ChatCard({
       >
         <Image
           style={styles.image}
-          source={
-            avatarURL
-              ? { uri: avatarURL }
-              : require("../../assets/profile-circle.png")
-          }
+          source={{
+            uri:
+              avatarURL ||
+              "https://t3.ftcdn.net/jpg/05/16/27/58/360_F_516275801_f3Fsp17x6HQK0xQgDQEELoTuERO4SsWV.jpg",
+          }}
         />
         <View>
-          <Text style={{ fontWeight: "bold", color: "black" }}>{name}</Text>
           <Text
-            style={{ color: "black", fontWeight: 200 }}
-          >{`${you} ${lastMessage.message}`}</Text>
+            style={{ fontWeight: patrollerSeen ? 300 : "bold", color: "black" }}
+          >
+            {name}
+          </Text>
+          <Text
+            style={{ color: "black", fontWeight: patrollerSeen ? 300 : "bold" }}
+          >{`${you} ${truncateAndAddDots(
+            messagePlaceholder
+          )} ${displayDate}`}</Text>
         </View>
       </Pressable>
     </View>

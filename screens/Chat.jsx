@@ -31,6 +31,10 @@ export default function Chat({ route }) {
           },
         }));
         setMessages(currentMessages);
+        firestore()
+          .collection("rooms")
+          .doc(roomId)
+          .update({ patrollerSeen: true });
       });
 
     return () => subscriber();
@@ -65,6 +69,8 @@ export default function Chat({ route }) {
         },
       }
     );
+
+    firestore().collection("rooms").doc(roomId).update({ adminSeen: false });
   }, []);
 
   return (

@@ -128,6 +128,17 @@ const BottomMenu = () => {
         .collection("patrollers")
         .doc(user.data.uid)
         .update({ avatarUrl: downloadURL });
+
+      const rooms = await firestore()
+        .collection("rooms")
+        .where("patroller.id", "==", user.data.uid)
+        .get();
+
+      rooms.forEach((doc) => {
+        firestore().collection("rooms").doc(doc.id).update({
+          patrollerAvatarURL: downloadURL,
+        });
+      });
     } catch (error) {
       console.error("Error uploading file:", error);
     }
